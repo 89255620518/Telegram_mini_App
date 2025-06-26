@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Дали-Хинкали - кафе грузинской кухни с бесплатной доставкой по Орехово-Зуевскому району" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Telegram WebApp специфичные мета-теги -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Подключение Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <title>Дали-Хинкали кафе грузинской кухни с летней верандой</title>
+    
+    <!-- Предзагрузка важных ресурсов -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  </head>
+  <body>
+    <noscript>Для работы приложения необходимо включить JavaScript в вашем браузере.</noscript>
+    <div id="root"></div>
+    
+    <!-- Скрипт для инициализации WebApp параметров -->
+    <script>
+      // Проверяем, что мы внутри Telegram WebApp
+      if (window.Telegram && window.Telegram.WebApp) {
+        // Применяем тему Telegram
+        document.body.classList.add('telegram-web-app');
+        document.body.style.backgroundColor = 'var(--tg-theme-bg-color)';
+        document.body.style.color = 'var(--tg-theme-text-color)';
+        
+        // Расширяем на весь экран
+        window.Telegram.WebApp.expand();
+      }
+    </script>
+  </body>
+</html>

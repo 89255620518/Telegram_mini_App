@@ -3,6 +3,7 @@ import BannerComponent from "../component/MainComponent/Banner/banner";
 import SubMenuComponent from "../component/MainComponent/SubMenu/subMenu";
 import ReserveTable from "../component/MainComponent/Reserve/ReserveTable/reserveTable";
 import DeliveryComponent from "../component/MainComponent/Delivery/deliveryComponent";
+import DeliveryRulesComponent from "../component/MainComponent/DeliveryRules/deliveryRules";
 
 const HomePage = () => {
 
@@ -17,6 +18,7 @@ const HomePage = () => {
             <SubMenuComponent />
             <ReserveTable />
             <DeliveryComponent />
+            <DeliveryRulesComponent />
         </div>
     )
 }

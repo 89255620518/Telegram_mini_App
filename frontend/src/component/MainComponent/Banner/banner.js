@@ -2,6 +2,7 @@ import styles from './banner.module.scss';
 import mainMenu from './img/main.jpg';
 import beverage from './img/bavarage.jpg';
 import biznes from './img/biznes.jpg';
+import service from './img/addServicesBanner.jpeg';
 
 const BannerComponent = () => {
     return (
@@ -26,6 +27,13 @@ const BannerComponent = () => {
                         <img src={biznes} alt="Бизнес ланч Дали-Хинкали" />
                     </div>
                     <p className={styles.menuText}>Бизнес ланч</p>
+                </div>
+
+                <div className={styles.menuItem}>
+                    <div className={`${styles.menuImage} ${styles.service}`}>
+                        <img src={service} alt="Бизнес ланч Дали-Хинкали" />
+                    </div>
+                    <p className={styles.menuText}>Доп услуги</p>
                 </div>
             </div>
         </div>

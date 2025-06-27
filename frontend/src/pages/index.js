@@ -1,6 +1,8 @@
 import { Helmet } from "react-helmet";
 import BannerComponent from "../component/MainComponent/Banner/banner";
 import SubMenuComponent from "../component/MainComponent/SubMenu/subMenu";
+import ReserveTable from "../component/MainComponent/Reserve/ReserveTable/reserveTable";
+import DeliveryComponent from "../component/MainComponent/Delivery/deliveryComponent";
 
 const HomePage = () => {
 
@@ -13,6 +15,8 @@ const HomePage = () => {
             </Helmet>
             <BannerComponent />
             <SubMenuComponent />
+            <ReserveTable />
+            <DeliveryComponent />
         </div>
     )
 }

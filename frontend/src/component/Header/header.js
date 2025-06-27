@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import styles from './header.module.scss';
-import logo from '../../image/022.png';
+import logo from '../../image/logo.1.png';
 import { useState, useEffect } from 'react';
 
 const Header = ({
@@ -29,10 +29,6 @@ const Header = ({
     return (
         <div className={`${styles.containerHeader} ${styles.webAppHeader}`}>
             <div className={styles.headerContent}>
-                <Link to="/" className={styles.logoContainer}>
-                    <img src={logo} alt='Логотип Дали-Хинкали' className={styles.logo} />
-                </Link>
-
                 {displayMobile ? (
                     <>
                         <button
@@ -54,13 +50,6 @@ const Header = ({
                                     <button onClick={modalClosed}><span>Банкеты</span></button>
                                     <button onClick={modalClosed}><span>Такси</span></button>
                                     <button onClick={modalClosed}><span>Контакты</span></button>
-
-                                    {!isAuth && (
-                                        <>
-                                            <Link to="/login" onClick={modalClosed}><span>Войти</span></Link>
-                                            <Link to="/register" onClick={modalClosed}><span>Регистрация</span></Link>
-                                        </>
-                                    )}
                                 </div>
                             </div>
                         )}
@@ -74,19 +63,22 @@ const Header = ({
                         <button><span>Банкеты</span></button>
                         <button><span>Такси</span></button>
                         <button><span>Контакты</span></button>
-
-                        {isAuth ? (
-                            <>
-                                <Link to="/cabinet" className={styles.iconButton}>👤</Link>
-                                <Link to="/basket" className={styles.iconButton}>🛒</Link>
-                            </>
-                        ) : (
-                            <>
-                                <Link to="/login" className={styles.authButton}>Войти</Link>
-                                <Link to="/register" className={styles.authButton}>Регистрация</Link>
-                            </>
-                        )}
                     </div>
+                )}
+
+                <Link to="/" className={styles.logoContainer}>
+                    <img src={logo} alt='Логотип Дали-Хинкали' className={styles.logo} />
+                </Link>
+
+                {isAuth ? (
+                    <>
+                        <Link to="/cabinet" className={styles.iconButton}>👤</Link>
+                        <Link to="/basket" className={styles.iconButton}>🛒</Link>
+                    </>
+                ) : (
+                    <>
+                        <Link to="/login" className={styles.authButton}>Войти</Link>
+                    </>
                 )}
             </div>
         </div>

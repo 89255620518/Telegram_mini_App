@@ -4,6 +4,8 @@ import SubMenuComponent from "../component/MainComponent/SubMenu/subMenu";
 import ReserveTable from "../component/MainComponent/Reserve/ReserveTable/reserveTable";
 import DeliveryComponent from "../component/MainComponent/Delivery/deliveryComponent";
 import DeliveryRulesComponent from "../component/MainComponent/DeliveryRules/deliveryRules";
+import ReserveHall from "../component/MainComponent/Reserve/ReserveHall/reserveHall";
+import TaxiComponent from "../component/MainComponent/TaxiComponent/taxiComponent";
 
 const HomePage = () => {
 
@@ -19,6 +21,8 @@ const HomePage = () => {
             <ReserveTable />
             <DeliveryComponent />
             <DeliveryRulesComponent />
+            <ReserveHall />
+            <TaxiComponent />
         </div>
     )
 }

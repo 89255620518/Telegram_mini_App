@@ -16,7 +16,7 @@ import reiting from "../../image/img11.png";
 import poyu from "../../image/img9.png";
 import shashlandia from "../../image/img1.png";
 
-const Footer = () => {
+const Footer = ({ contactsRef }) => {
     const projects = [
         { src: frantsuzClub, link: "https://frantsuz-club.ru/", name: "Французский клуб" },
         { src: dostavkaPom, link: "https://dostavka-pominki.ru/", name: "Доставка поминки" },
@@ -52,7 +52,7 @@ const Footer = () => {
                     </div>
 
                     <div className={styles.contactsSection}>
-                        <div className={styles.contacts}>
+                        <div className={styles.contacts} ref={contactsRef}>
                             <h2 className={styles.sectionTitle}>Контакты</h2>
                             <div className={styles.contactInfo}>
                                 <p>Режим работы:<br />с 11:00 до 23:00<br />ежедневно без выходных</p>

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import styles from './header.module.scss';
 import logo from '../../image/logo.1.png';
 import { useState, useEffect } from 'react';
@@ -7,10 +7,17 @@ const Header = ({
     modalOpen,
     modalClosed,
     isModalOpen,
+    tableRef,
+    hallRef,
+    taxiRef,
+    deliveryRef,
+    contactsRef
     // isWebApp = false
 }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [isAuth, setIsAuth] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const handleResize = () => {
@@ -23,6 +30,41 @@ const Header = ({
 
     // Для WebApp всегда показываем мобильную версию
     const displayMobile = isMobile;
+
+    const scrollToRef = (ref) => {
+        if (ref && ref.current) {
+            ref.current.scrollIntoView({ behavior: "smooth" });
+        } else {
+            console.error("Ref is undefined or does not have a current property");
+        }
+    }
+
+    const handleScroll = (ref) => {
+        if (location.pathname === '/') {
+            if (isModalOpen) {
+                modalClosed();
+                setTimeout(() => {
+                    scrollToRef(ref)
+                }, 300)
+            } else {
+                scrollToRef(ref)
+            }
+        } else {
+            navigate('/');
+            setTimeout(() => {
+                if (isModalOpen) {
+                    modalClosed();
+                    setTimeout(() => {
+                        scrollToRef(ref);
+                    }, 300)
+                } else {
+                    setTimeout(() => {
+                        scrollToRef(ref)
+                    }, 300)
+                }
+            }, 400)
+        }
+    }
 
     // Специальная кнопка "Назад" для WebApp
 
@@ -45,24 +87,24 @@ const Header = ({
                                 <div className={styles.mobileMenuContent}>
                                     <Link to={'/'} onClick={modalClosed}><span>Главная</span></Link>
                                     <Link to={'/menu'} onClick={modalClosed}><span>Меню</span></Link>
-                                    <button onClick={modalClosed}><span>Резерв Стола</span></button>
-                                    <button onClick={modalClosed}><span>Доставка</span></button>
-                                    <button onClick={modalClosed}><span>Банкеты</span></button>
-                                    <button onClick={modalClosed}><span>Такси</span></button>
-                                    <button onClick={modalClosed}><span>Контакты</span></button>
+                                    <button onClick={() => handleScroll(tableRef)}><span>Резерв Стола</span></button>
+                                    <button onClick={() => handleScroll(deliveryRef)}><span>Доставка</span></button>
+                                    <button onClick={() => handleScroll(hallRef)}><span>Банкеты</span></button>
+                                    <button onClick={() => handleScroll(taxiRef)}><span>Такси</span></button>
+                                    <button onClick={() => handleScroll(contactsRef)}><span>Контакты</span></button>
                                 </div>
                             </div>
                         )}
                     </>
                 ) : (
                     <div className={styles.desktopMenu}>
-                        <Link to={'/'}><span>Главная</span></Link>
-                        <Link to={'/menu'}><span>Меню</span></Link>
-                        <button><span>Резерв Стола</span></button>
-                        <button><span>Доставка</span></button>
-                        <button><span>Банкеты</span></button>
-                        <button><span>Такси</span></button>
-                        <button><span>Контакты</span></button>
+                        <Link to={'/'} onClick={modalClosed}><span>Главная</span></Link>
+                        <Link to={'/menu'} onClick={modalClosed}><span>Меню</span></Link>
+                        <button onClick={() => handleScroll(tableRef)}><span>Резерв Стола</span></button>
+                        <button onClick={() => handleScroll(deliveryRef)}><span>Доставка</span></button>
+                        <button onClick={() => handleScroll(hallRef)}><span>Банкеты</span></button>
+                        <button onClick={() => handleScroll(taxiRef)}><span>Такси</span></button>
+                        <button onClick={() => handleScroll(contactsRef)}><span>Контакты</span></button>
                     </div>
                 )}
 
@@ -72,12 +114,12 @@ const Header = ({
 
                 {isAuth ? (
                     <>
-                        <Link to="/cabinet" className={styles.iconButton}>👤</Link>
-                        <Link to="/basket" className={styles.iconButton}>🛒</Link>
+                        <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>👤</Link>
+                        <Link to="/basket" onClick={modalClosed} className={styles.iconButton}>🛒</Link>
                     </>
                 ) : (
                     <>
-                        <Link to="/login" className={styles.authButton}>Войти</Link>
+                        <Link to="/login" onClick={modalClosed} className={styles.authButton}>Войти</Link>
                     </>
                 )}
             </div>

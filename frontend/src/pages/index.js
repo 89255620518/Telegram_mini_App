@@ -7,7 +7,12 @@ import DeliveryRulesComponent from "../component/MainComponent/DeliveryRules/del
 import ReserveHall from "../component/MainComponent/Reserve/ReserveHall/reserveHall";
 import TaxiComponent from "../component/MainComponent/TaxiComponent/taxiComponent";
 
-const HomePage = () => {
+const HomePage = ({
+    tableRef,
+    hallRef,
+    taxiRef,
+    deliveryRef
+}) => {
 
     return (
         <div style={{ background: "#ffffff" }}>
@@ -18,11 +23,11 @@ const HomePage = () => {
             </Helmet>
             <BannerComponent />
             <SubMenuComponent />
-            <ReserveTable />
-            <DeliveryComponent />
+            <ReserveTable tableRef={tableRef} />
+            <DeliveryComponent deliveryRef={deliveryRef} />
             <DeliveryRulesComponent />
-            <ReserveHall />
-            <TaxiComponent />
+            <ReserveHall hallRef={hallRef} />
+            <TaxiComponent taxiRef={taxiRef} />
         </div>
     )
 }

@@ -1,10 +1,10 @@
 import styles from './taxiComponent.module.scss';
 import taxiFoto from './img/taxi.jpg';
 
-const TaxiComponent = () => {
+const TaxiComponent = ({ taxiRef }) => {
 
     return (
-        <div className={styles.containerTaxi}>
+        <div className={styles.containerTaxi} ref={taxiRef}>
             <h1 className={styles.containerTaxi__h1}>Такси до дома</h1>
             <div className={styles.containerTaxi__content}>
                 <div className={styles.containerTaxi__content__imgs}>

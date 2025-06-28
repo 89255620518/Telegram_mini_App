@@ -2,7 +2,7 @@ import styles from './reserveHall.module.scss';
 import { useState, useEffect } from 'react';
 import fotoHall from '../img/reserveHall.jpg';
 
-const ReserveHall = () => {
+const ReserveHall = ({ hallRef }) => {
     const [formData, setFormData] = useState({
         hall: '',
         date: '',
@@ -132,7 +132,7 @@ const ReserveHall = () => {
     };
 
     return (
-        <div className={styles.containerReserveTable}>
+        <div className={styles.containerReserveTable} ref={hallRef}>
             <h1 className={styles.title}>Банкетный зал</h1>
             <div className={styles.content}>
                 <form className={styles.form} onSubmit={handleSubmit}>

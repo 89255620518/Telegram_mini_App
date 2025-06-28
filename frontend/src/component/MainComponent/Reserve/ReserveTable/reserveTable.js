@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Zal from './Zal/zal';
 import Veranda from './Veranda/veranda';
 
-const ReserveTable = () => {
+const ReserveTable = ({ tableRef }) => {
     const [currentModal, setCurrentModal] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -174,7 +174,7 @@ const ReserveTable = () => {
     };
 
     return (
-        <div className={styles.containerReserveTable}>
+        <div className={styles.containerReserveTable} ref={tableRef}>
             <h1 className={styles.title}>Резерв стола</h1>
             <div className={styles.content}>
                 <form className={styles.form} onSubmit={handleSubmit}>

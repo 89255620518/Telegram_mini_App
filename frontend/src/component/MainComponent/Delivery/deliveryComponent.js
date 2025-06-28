@@ -1,10 +1,10 @@
 import styles from './delivery.module.scss';
 import mobile from './img/delivery-mobile.png';
 
-const DeliveryComponent = () => {
+const DeliveryComponent = ({ deliveryRef }) => {
 
     return (
-        <div className={styles.containerDelivery}>
+        <div className={styles.containerDelivery} ref={deliveryRef}>
             <h1 className={styles.containerDelivery__h1}>Доставка</h1>
             <div className={styles.containerDelivery__content}>
                 <div className={styles.containerDelivery__content__imgs}>

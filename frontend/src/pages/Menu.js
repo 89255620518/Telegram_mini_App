@@ -1,8 +1,10 @@
+import MenuComponent from "../component/MenuComponent/menuComponent";
+
 const MenuPage = () => {
 
     return (
-        <div>
-
+        <div style={{ background: "#ffffff" }}>
+            <MenuComponent />
         </div>
     )
 }

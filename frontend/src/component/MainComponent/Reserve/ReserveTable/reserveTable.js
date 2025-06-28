@@ -13,7 +13,7 @@ const ReserveTable = ({ tableRef }) => {
         time: '',
         name: '',
         email: '',
-        phone: '',
+        phone: '+7',
         guests: '',
         comments: ''
     });
@@ -25,7 +25,7 @@ const ReserveTable = ({ tableRef }) => {
         time: '',
         name: '',
         email: '',
-        phone: '',
+        phone: '+7',
         guests: ''
     });
 
@@ -50,6 +50,41 @@ const ReserveTable = ({ tableRef }) => {
             ...prev,
             table: true
         }));
+    }, []);
+
+    const handlePhoneChange = useCallback((value) => {
+        // Удаляем все нецифровые символы, кроме +
+        let cleaned = value.replace(/[^\d+]/g, '');
+
+        // Обеспечиваем начало с +7
+        if (!cleaned.startsWith('+7')) {
+            cleaned = '+7' + cleaned.replace(/^\+/, '');
+        }
+
+        // Ограничиваем длину (11 цифр после +)
+        if (cleaned.length > 12) {
+            cleaned = cleaned.substring(0, 12);
+        }
+
+        return cleaned;
+    }, []);
+
+    const formatPhoneDisplay = useCallback((phone) => {
+        if (!phone) return '+7';
+
+        const digits = phone.replace(/\D/g, '').substring(1); // Удаляем + и все нецифры
+
+        if (digits.length === 0) return '+7';
+        if (digits.length <= 3) return `+7 (${digits}`;
+        if (digits.length <= 6) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3)}`;
+        if (digits.length <= 8) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6)}`;
+        return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6, 8)}-${digits.substring(8, 10)}`;
+    }, []);
+
+    const validatePhone = useCallback((phone) => {
+        if (!phone) return 'Пожалуйста, введите телефон';
+        if (phone.length < 12) return 'Некорректный номер телефона';
+        return '';
     }, []);
 
     // Валидация полей
@@ -78,9 +113,7 @@ const ReserveTable = ({ tableRef }) => {
             case 'email':
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? '' : 'Пожалуйста, введите корректный email';
             case 'phone':
-                return /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(value)
-                    ? ''
-                    : 'Пожалуйста, введите корректный телефон';
+                return validatePhone(value);
             case 'guests':
                 if (value === '') return 'Пожалуйста, укажите количество гостей';
                 const num = Number(value);
@@ -107,10 +140,18 @@ const ReserveTable = ({ tableRef }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        if (name === 'phone') {
+            const formattedPhone = handlePhoneChange(value);
+            setFormData(prev => ({
+                ...prev,
+                [name]: formattedPhone
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
 
         if (name === 'hall') {
             // Сбрасываем выбор стола при смене зала
@@ -305,9 +346,18 @@ const ReserveTable = ({ tableRef }) => {
                             type="tel"
                             id="phone"
                             name="phone"
-                            value={formData.phone}
+                            value={formatPhoneDisplay(formData.phone)}
                             onChange={handleChange}
-                            onBlur={handleBlur}
+                            onBlur={(e) => {
+                                handleBlur(e);
+                                // Дополнительная валидация при потере фокуса
+                                if (formData.phone.length < 12) {
+                                    setErrors(prev => ({
+                                        ...prev,
+                                        phone: 'Введите корректный номер телефона (+7 XXX XXX XX XX)'
+                                    }));
+                                }
+                            }}
                             className={getFieldClass('phone')}
                             required
                             placeholder="+7 (XXX) XXX-XX-XX"

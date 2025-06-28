@@ -1,5 +1,5 @@
 import styles from './reserveHall.module.scss';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import fotoHall from '../img/reserveHall.jpg';
 
 const ReserveHall = ({ hallRef }) => {
@@ -9,7 +9,7 @@ const ReserveHall = ({ hallRef }) => {
         time: '',
         name: '',
         email: '',
-        phone: '',
+        phone: '+7',
         guests: '',
         comments: ''
     });
@@ -20,7 +20,7 @@ const ReserveHall = ({ hallRef }) => {
         time: '',
         name: '',
         email: '',
-        phone: '',
+        phone: '+7',
         guests: ''
     });
 
@@ -33,6 +33,23 @@ const ReserveHall = ({ hallRef }) => {
         email: false,
         guests: false
     });
+    const formatPhoneDisplay = useCallback((phone) => {
+        if (!phone) return '+7';
+
+        const digits = phone.replace(/\D/g, '').substring(1); // Удаляем + и все нецифры
+
+        if (digits.length === 0) return '+7';
+        if (digits.length <= 3) return `+7 (${digits}`;
+        if (digits.length <= 6) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3)}`;
+        if (digits.length <= 8) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6)}`;
+        return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6, 8)}-${digits.substring(8, 10)}`;
+    }, []);
+
+    const validatePhone = useCallback((phone) => {
+        if (!phone) return 'Пожалуйста, введите телефон';
+        if (phone.length < 12) return 'Некорректный номер телефона';
+        return '';
+    }, []);
 
     // Валидация полей
     const validateField = (name, value) => {
@@ -58,9 +75,7 @@ const ReserveHall = ({ hallRef }) => {
             case 'email':
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? '' : 'Пожалуйста, введите корректный email';
             case 'phone':
-                return /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/.test(value)
-                    ? ''
-                    : 'Пожалуйста, введите корректный телефон';
+                return validatePhone(value);
             case 'guests':
                 if (value === '') return 'Пожалуйста, укажите количество гостей';
                 const num = Number(value);
@@ -234,9 +249,18 @@ const ReserveHall = ({ hallRef }) => {
                             type="tel"
                             id="phone"
                             name="phone"
-                            value={formData.phone}
+                            value={formatPhoneDisplay(formData.phone)}
                             onChange={handleChange}
-                            onBlur={handleBlur}
+                            onBlur={(e) => {
+                                handleBlur(e);
+                                // Дополнительная валидация при потере фокуса
+                                if (formData.phone.length < 12) {
+                                    setErrors(prev => ({
+                                        ...prev,
+                                        phone: 'Введите корректный номер телефона (+7 XXX XXX XX XX)'
+                                    }));
+                                }
+                            }}
                             className={getFieldClass('phone')}
                             required
                             placeholder="+7 (XXX) XXX-XX-XX"

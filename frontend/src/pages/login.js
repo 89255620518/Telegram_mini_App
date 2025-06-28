@@ -1,8 +1,10 @@
+import LoginComponent from "../component/AuthComponent/LoginComponent/loginComponent";
+
 const LoginPage = () => {
 
     return (
-        <div>
-
+        <div style={{ background: "#ffffff" }}>
+            <LoginComponent />
         </div>
     )
 }

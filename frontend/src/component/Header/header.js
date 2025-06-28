@@ -15,6 +15,7 @@ const Header = ({
     // isWebApp = false
 }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    // eslint-disable-next-line no-unused-vars
     const [isAuth, setIsAuth] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();

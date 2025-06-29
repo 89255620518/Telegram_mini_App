@@ -114,13 +114,20 @@ const Header = ({
                 </Link>
 
                 {isAuth ? (
-                    <>
-                        <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>👤</Link>
-                        <Link to="/basket" onClick={modalClosed} className={styles.iconButton}>🛒</Link>
-                    </>
-                ) : (
+                    // <>
+                    //     <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>👤</Link>
+                    //     <Link to="/basket" onClick={modalClosed} className={styles.iconButton}>🛒</Link>
+                    // </>
                     <>
                         <Link to="/login" onClick={modalClosed} className={styles.authButton}>Войти</Link>
+                    </>
+                ) : (
+                    // <>
+                    //     <Link to="/login" onClick={modalClosed} className={styles.authButton}>Войти</Link>
+                    // </>
+                    <>
+                        <Link to="/basket" onClick={modalClosed} className={styles.iconButton}>🛒</Link>
+                        <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>👤</Link>
                     </>
                 )}
             </div>

@@ -36,9 +36,9 @@ const Footer = ({ contactsRef }) => {
             <div className={styles.container}>
                 <div className={styles.topSection}>
                     <div className={styles.logoSection}>
-                        <div className={styles.logoContainer}>
+                        <Link to='/' className={styles.logoContainer}>
                             <img src={logo} alt='Логотип Дали-Хинкали' className={styles.logo} />
-                        </div>
+                        </Link>
 
                         <div className={styles.paymentButtons}>
                             <Link to="/payInfo" className={styles.button}>Правила оплаты</Link>

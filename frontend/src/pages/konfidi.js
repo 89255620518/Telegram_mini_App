@@ -7,7 +7,7 @@ const KonfidiPage = () => {
         <>
             <Helmet>
                 <title>Дали-Хинкали/ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</title>
-                <meta name="description" content="БВ Дали-Хинкали бесплатная доставка по Орехово-Зуевскому району" />
+                <meta name="description" content="В Дали-Хинкали бесплатная доставка по Орехово-Зуевскому району" />
                 <meta name="yandex-verification" content="c2e397d2d61662dc" />
             </Helmet>
             <PrivacyPolicy />

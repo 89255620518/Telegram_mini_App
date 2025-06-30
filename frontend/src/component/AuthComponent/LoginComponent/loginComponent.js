@@ -2,6 +2,7 @@ import styles from './login.module.scss';
 import { useState, useCallback } from 'react';
 import fotoGif from '../img/font.gif';
 import { Link } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const LoginComponent = () => {
     const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const LoginComponent = () => {
         email: false,
         password: false
     });
+    const [showPassword, setShowPassword] = useState(false);
 
     const validate = useCallback(() => {
         const newErrors = {
@@ -39,21 +41,20 @@ const LoginComponent = () => {
         return Object.keys(newErrors).every(key => !newErrors[key]);
     }, [formData.email, formData.password]);
 
-    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = useCallback((e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
-        
-        // Валидация при изменении, если поле уже было "тронуто"
+
         if (touched[name]) {
             setErrors(prev => ({
                 ...prev,
                 [name]: name === 'email'
-                    ? !value.trim() 
-                        ? 'Почта обязательна' 
-                        : !/\S+@\S+\.\S+/.test(value) 
+                    ? !value.trim()
+                        ? 'Почта обязательна'
+                        : !/\S+@\S+\.\S+/.test(value)
                             ? 'Некорректный формат почты'
                             : ''
                     : !value
@@ -65,21 +66,17 @@ const LoginComponent = () => {
         }
     }, [touched]);
 
-    const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+    const handleBlur = useCallback((e) => {
         const { name } = e.target;
         setTouched(prev => ({
             ...prev,
             [name]: true
         }));
-        
-        // Валидация при потере фокуса
         validate();
     }, [validate]);
 
-    const handleSubmit = useCallback((e: React.FormEvent) => {
+    const handleSubmit = useCallback((e) => {
         e.preventDefault();
-        
-        // Пометить все поля как touched перед валидацией
         setTouched({
             email: true,
             password: true
@@ -91,14 +88,17 @@ const LoginComponent = () => {
         }
     }, [formData, validate]);
 
-    const getInputClass = (fieldName: string) => {
-        return `${styles.input} ${
-            touched[fieldName] && errors[fieldName] 
-                ? styles.errorInput 
-                : touched[fieldName] 
-                    ? styles.validInput 
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const getInputClass = (fieldName) => {
+        return `${styles.input} ${touched[fieldName] && errors[fieldName]
+                ? styles.errorInput
+                : touched[fieldName]
+                    ? styles.validInput
                     : ''
-        }`;
+            }`;
     };
 
     return (
@@ -124,19 +124,29 @@ const LoginComponent = () => {
                             <span className={styles.errorText}>{errors.email}</span>
                         )}
                     </div>
-                    
+
                     <div className={styles.formGroup}>
                         <label htmlFor="password" className={styles.label}>Пароль</label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            className={getInputClass('password')}
-                            value={formData.password}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            placeholder="Не менее 6 символов"
-                        />
+                        <div className={styles.passwordInputContainer}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                name="password"
+                                className={getInputClass('password')}
+                                value={formData.password}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                placeholder="Не менее 6 символов"
+                            />
+                            <button
+                                type="button"
+                                className={styles.passwordToggle}
+                                onClick={togglePasswordVisibility}
+                                aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+                            >
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </button>
+                        </div>
                         {touched.password && errors.password && (
                             <span className={styles.errorText}>{errors.password}</span>
                         )}
@@ -146,9 +156,9 @@ const LoginComponent = () => {
                         <p className={styles.infoAuth_text}>Еще нет аккаунта?</p>
                         <Link to='/register' className={styles.registerLink}>Зарегистрируйтесь</Link>
                     </div>
-                    
-                    <button 
-                        type="submit" 
+
+                    <button
+                        type="submit"
                         className={styles.submitButton}
                         disabled={Object.values(errors).some(Boolean) && Object.values(touched).every(Boolean)}
                     >

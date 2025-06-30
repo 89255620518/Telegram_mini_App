@@ -2,6 +2,8 @@ import styles from './register.module.scss';
 import { useState, useEffect, useCallback } from 'react';
 import fotoGif from '../img/font.gif';
 import { Link } from 'react-router-dom';
+import RegisterModal from '../RegisterModal/registerModal';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const RegisterComponent = () => {
     const [formData, setFormData] = useState({
@@ -14,27 +16,24 @@ const RegisterComponent = () => {
     });
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handlePhoneChange = useCallback((value) => {
-        // Удаляем все нецифровые символы, кроме +
         let cleaned = value.replace(/[^\d+]/g, '');
-        
-        // Обеспечиваем начало с +7
         if (!cleaned.startsWith('+7')) {
             cleaned = '+7' + cleaned.replace(/^\+/, '');
         }
-        
-        // Ограничиваем длину (11 цифр после +)
         if (cleaned.length > 12) {
             cleaned = cleaned.substring(0, 12);
         }
-        
         return cleaned;
     }, []);
 
     const handleChange = useCallback((e) => {
         const { name, value } = e.target;
-        
+
         if (name === 'phone') {
             const formattedPhone = handlePhoneChange(value);
             setFormData(prev => ({
@@ -51,9 +50,7 @@ const RegisterComponent = () => {
 
     const formatPhoneDisplay = useCallback((phone) => {
         if (!phone) return '+7';
-        
-        const digits = phone.replace(/\D/g, '').substring(1); // Удаляем + и все нецифры
-        
+        const digits = phone.replace(/\D/g, '').substring(1);
         if (digits.length === 0) return '+7';
         if (digits.length <= 3) return `+7 (${digits}`;
         if (digits.length <= 6) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3)}`;
@@ -117,13 +114,31 @@ const RegisterComponent = () => {
         e.preventDefault();
         if (validate()) {
             setIsSubmitting(true);
-            console.log('Регистрация:', {
-                ...formData,
-                phone: formData.phone.replace(/\D/g, '') // Отправляем только цифры
-            });
-            // Здесь можно добавить вызов API для регистрации
+
+            // Имитация запроса к API
+            setTimeout(() => {
+                console.log('Регистрация:', {
+                    ...formData,
+                    phone: formData.phone.replace(/\D/g, '')
+                });
+                setIsSuccess(true);
+                setIsSubmitting(false);
+
+                // Автоматическое закрытие уведомления через 3 секунды
+                setTimeout(() => {
+                    setIsSuccess(false);
+                }, 3000);
+            }, 1000);
         }
     }, [formData, validate]);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const toggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword(!showConfirmPassword);
+    };
 
     return (
         <div className={styles.containerRegister}>
@@ -150,29 +165,49 @@ const RegisterComponent = () => {
 
                             <div className={styles.formGroup}>
                                 <label htmlFor="password" className={styles.label}>Пароль*</label>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    className={`${styles.input} ${errors.password ? styles.errorInput : ''}`}
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="Не менее 6 символов"
-                                />
+                                <div className={styles.passwordInputContainer}>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        id="password"
+                                        name="password"
+                                        className={`${styles.input} ${errors.password ? styles.errorInput : ''}`}
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        placeholder="Не менее 6 символов"
+                                    />
+                                    <button
+                                        type="button"
+                                        className={styles.passwordToggle}
+                                        onClick={togglePasswordVisibility}
+                                        aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+                                    >
+                                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
                                 {errors.password && <span className={styles.errorText}>{errors.password}</span>}
                             </div>
 
                             <div className={styles.formGroup}>
                                 <label htmlFor="confirmPassword" className={styles.label}>Подтверждение пароля*</label>
-                                <input
-                                    type="password"
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    className={`${styles.input} ${errors.confirmPassword ? styles.errorInput : ''}`}
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    placeholder="Повторите пароль"
-                                />
+                                <div className={styles.passwordInputContainer}>
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        className={`${styles.input} ${errors.confirmPassword ? styles.errorInput : ''}`}
+                                        value={formData.confirmPassword}
+                                        onChange={handleChange}
+                                        placeholder="Повторите пароль"
+                                    />
+                                    <button
+                                        type="button"
+                                        className={styles.passwordToggle}
+                                        onClick={toggleConfirmPasswordVisibility}
+                                        aria-label={showConfirmPassword ? "Скрыть пароль" : "Показать пароль"}
+                                    >
+                                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                                    </button>
+                                </div>
                                 {errors.confirmPassword && (
                                     <span className={styles.errorText}>{errors.confirmPassword}</span>
                                 )}
@@ -250,6 +285,8 @@ const RegisterComponent = () => {
                     </button>
                 </form>
             </div>
+
+            {isSuccess && <RegisterModal />}
         </div>
     );
 };

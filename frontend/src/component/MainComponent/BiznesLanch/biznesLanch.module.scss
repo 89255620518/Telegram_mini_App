@@ -1,0 +1,159 @@
+.containerBiznes {
+    padding: 2rem 0 7rem;
+    text-align: center;
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow: hidden;
+
+    &__content {
+        &__info {
+            position: relative;
+            height: 300px; // или нужная вам высота
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 8px; // опционально
+
+            &_img {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                z-index: 1;
+            }
+
+            &_text {
+                position: relative;
+                z-index: 2;
+                color: white;
+                font-size: 2rem;
+                font-weight: bold;
+                text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+                background-color: rgb(0 0 0 / 26%);
+                padding: 0.5rem 1.5rem;
+                border-radius: 4px;
+
+                &_span {
+                    display: block;
+                    font-size: 1.5rem;
+                    font-weight: normal;
+                    margin-top: 0.5rem;
+                }
+            }
+        }
+
+        &__menu {
+
+            &__h1 {
+                font-size: 2rem;
+                margin-bottom: 5rem;
+                color: #333;
+            }
+        }
+    }
+}
+
+.carouselContainer {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+    height: 400px;
+}
+
+.carousel {
+    overflow: hidden;
+    width: 100%;
+    padding: 0 20px;
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.carouselTrack {
+    display: flex;
+    will-change: transform;
+    touch-action: pan-y;
+    height: 100%;
+    flex-direction: row;
+    align-items: center;
+}
+
+.carouselItem {
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    box-sizing: border-box;
+
+    @media (max-width: 768px) {
+        padding: 0 5px;
+    }
+}
+
+.carouselButton {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+
+    &:hover {
+        background: #f8f8f8;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    &Prev {
+        left: 0;
+    }
+
+    &Next {
+        right: 0;
+    }
+
+    @media (max-width: 768px) {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.5rem;
+    gap: 0.5rem;
+
+    @media (min-width: 769px) {
+        display: none;
+    }
+}
+
+.paginationDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ddd;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &.active {
+        background: #333;
+        transform: scale(1.2);
+    }
+
+    &:focus {
+        outline: none;
+    }
+}

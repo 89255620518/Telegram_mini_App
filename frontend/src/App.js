@@ -16,6 +16,8 @@ import PayPage from './pages/pay';
 import OplataInfoPage from './pages/oplataInfo';
 import VozvratPage from './pages/vozvrat';
 import KonfidiPage from './pages/konfidi';
+import BiznesLanchPage from './pages/biznesLanch';
+import AdditionalServicesPage from './pages/additionalServices';
 
 const routes = [
   // { path: '/admin', element: <AdminPage /> },
@@ -27,6 +29,8 @@ const routes = [
   { path: '/pay', element: <PayPage /> },
   { path: '/payInfo', element: <OplataInfoPage /> },
   { path: '/vozvrat', element: <VozvratPage /> },
+  { path: '/lanch', element: <BiznesLanchPage /> },
+  { path: '/services', element: <AdditionalServicesPage /> },
   { path: '/policy', element: <KonfidiPage /> }
 ];
 

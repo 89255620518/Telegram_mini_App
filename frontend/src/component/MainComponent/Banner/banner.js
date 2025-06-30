@@ -23,19 +23,19 @@ const BannerComponent = () => {
                     <p className={styles.menuText}>Напитки</p>
                 </div>
 
-                <div className={styles.menuItem}>
+                <Link to='/lanch' className={styles.menuItem}>
                     <div className={`${styles.menuImage} ${styles.business}`}>
                         <img src={biznes} alt="Бизнес ланч Дали-Хинкали" />
                     </div>
                     <p className={styles.menuText}>Бизнес ланч</p>
-                </div>
+                </Link>
 
-                <div className={styles.menuItem}>
+                <Link to='/services' className={styles.menuItem}>
                     <div className={`${styles.menuImage} ${styles.service}`}>
                         <img src={service} alt="Бизнес ланч Дали-Хинкали" />
                     </div>
                     <p className={styles.menuText}>Доп услуги</p>
-                </div>
+                </Link>
             </div>
         </div>
     )

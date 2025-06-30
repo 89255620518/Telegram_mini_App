@@ -2,13 +2,16 @@ import styles from './reserveTable.module.scss';
 import { useState, useEffect, useCallback } from 'react';
 import Zal from './Zal/zal';
 import Veranda from './Veranda/veranda';
+import ReserveModal from '../ReserveModal/reserveModal';
 
 const ReserveTable = ({ tableRef }) => {
     const [currentModal, setCurrentModal] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [formData, setFormData] = useState({
         hall: '',
-        table: '', // Добавлено поле для хранения выбранного стола
+        table: '',
         date: '',
         time: '',
         name: '',
@@ -20,7 +23,7 @@ const ReserveTable = ({ tableRef }) => {
 
     const [errors, setErrors] = useState({
         hall: '',
-        table: '', // Добавлена валидация для стола
+        table: '',
         date: '',
         time: '',
         name: '',
@@ -40,7 +43,6 @@ const ReserveTable = ({ tableRef }) => {
         guests: false
     });
 
-    // Обработчик выбора стола из модального окна
     const handleTableSelect = useCallback((tableNumber) => {
         setFormData(prev => ({
             ...prev,
@@ -53,27 +55,19 @@ const ReserveTable = ({ tableRef }) => {
     }, []);
 
     const handlePhoneChange = useCallback((value) => {
-        // Удаляем все нецифровые символы, кроме +
         let cleaned = value.replace(/[^\d+]/g, '');
-
-        // Обеспечиваем начало с +7
         if (!cleaned.startsWith('+7')) {
             cleaned = '+7' + cleaned.replace(/^\+/, '');
         }
-
-        // Ограничиваем длину (11 цифр после +)
         if (cleaned.length > 12) {
             cleaned = cleaned.substring(0, 12);
         }
-
         return cleaned;
     }, []);
 
     const formatPhoneDisplay = useCallback((phone) => {
         if (!phone) return '+7';
-
-        const digits = phone.replace(/\D/g, '').substring(1); // Удаляем + и все нецифры
-
+        const digits = phone.replace(/\D/g, '').substring(1);
         if (digits.length === 0) return '+7';
         if (digits.length <= 3) return `+7 (${digits}`;
         if (digits.length <= 6) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3)}`;
@@ -87,7 +81,6 @@ const ReserveTable = ({ tableRef }) => {
         return '';
     }, []);
 
-    // Валидация полей
     const validateField = (name, value) => {
         switch (name) {
             case 'hall':
@@ -125,7 +118,6 @@ const ReserveTable = ({ tableRef }) => {
         }
     };
 
-    // Проверка всех полей при изменении
     useEffect(() => {
         const newErrors = { ...errors };
         let key;
@@ -135,7 +127,6 @@ const ReserveTable = ({ tableRef }) => {
             }
         }
         setErrors(newErrors);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData]);
 
     const handleChange = (e) => {
@@ -154,9 +145,7 @@ const ReserveTable = ({ tableRef }) => {
         }
 
         if (name === 'hall') {
-            // Сбрасываем выбор стола при смене зала
             setFormData(prev => ({ ...prev, table: '' }));
-
             if (value === 'Основной зал') {
                 setCurrentModal('zal');
                 setIsModalOpen(true);
@@ -183,32 +172,66 @@ const ReserveTable = ({ tableRef }) => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const resetForm = useCallback(() => {
+        setFormData({
+            hall: '',
+            table: '',
+            date: '',
+            time: '',
+            name: '',
+            email: '',
+            phone: '+7',
+            guests: '',
+            comments: ''
+        });
+        setTouched({
+            hall: false,
+            table: false,
+            date: false,
+            time: false,
+            name: false,
+            phone: false,
+            email: false,
+            guests: false
+        });
+    }, []);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        // Проверяем, есть ли ошибки
+        // Проверка всех полей перед отправкой
+        const newTouched = {};
+        Object.keys(touched).forEach(key => {
+            newTouched[key] = true;
+        });
+        setTouched(newTouched);
+
         const hasErrors = Object.values(errors).some(error => error !== '');
+        if (hasErrors) {
+            setIsSubmitting(false);
+            return;
+        }
 
-        if (!hasErrors) {
+        try {
+            // Здесь должна быть логика отправки данных на сервер
             console.log('Форма отправлена:', formData);
-            // Здесь будет логика отправки формы
-        } else {
-            console.log('Форма содержит ошибки');
-            // Помечаем все поля как touched для показа ошибок
-            setTouched({
-                hall: true,
-                table: true,
-                date: true,
-                time: true,
-                name: true,
-                email: true,
-                phone: true,
-                guests: true
-            });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            setIsSuccess(true);
+            resetForm();
+
+            // Автоматическое закрытие уведомления через 3 секунды
+            setTimeout(() => {
+                setIsSuccess(false);
+            }, 3000);
+        } catch (error) {
+            console.error('Ошибка при отправке формы:', error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    // Функция для определения класса поля
     const getFieldClass = (fieldName) => {
         if (!touched[fieldName]) return styles.input;
         return errors[fieldName] ? styles.inputError : styles.inputValid;
@@ -398,7 +421,13 @@ const ReserveTable = ({ tableRef }) => {
                         />
                     </div>
 
-                    <button type="submit" className={styles.submitButton}>Забронировать</button>
+                    <button
+                        type="submit"
+                        className={styles.submitButton}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Отправка...' : 'Забронировать'}
+                    </button>
                 </form>
             </div>
 
@@ -410,6 +439,8 @@ const ReserveTable = ({ tableRef }) => {
             {isModalOpen && currentModal === 'veranda' && (
                 <Veranda closeModal={closeModal} handler={handleTableSelect} />
             )}
+
+            {isSuccess && <ReserveModal />}
         </div>
     )
 }

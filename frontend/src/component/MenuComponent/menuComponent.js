@@ -133,7 +133,7 @@ const MenuComponent = () => {
 
     return (
         <div className={styles.containerSubMenu}>
-            <h1 className={styles.containerSubMenu__h1}>Меню</h1>
+            {/* <h1 className={styles.containerSubMenu__h1}>Меню</h1> */}
 
             {/* Добавляем переключатель категорий */}
             <div className={styles.categories}>
@@ -146,7 +146,12 @@ const MenuComponent = () => {
                         {category}
                     </button>
                 ))}
+
+                <div className={styles.containerSubMenu__line}></div>
             </div>
+
+            <h2 className={styles.containerSubMenu__h1}>{activeCategory}</h2>
+
 
             <div className={styles.carouselContainer}>
                 {canGoPrev && (

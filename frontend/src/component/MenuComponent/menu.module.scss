@@ -147,8 +147,13 @@
 
     &__h1 {
         font-size: 2rem;
-        margin-bottom: 5rem;
+        margin-bottom: 1.5rem;
         color: #333;
+    }
+
+    &__line {
+        width: 100%;
+        border: 1px solid #000;
     }
 }
 
@@ -258,14 +263,15 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px;
+    gap: 15px;
     margin-bottom: 2rem;
     padding: 0 20px;
 }
 
 .categoryButton {
     padding: 8px 16px;
-    border: 1px solid #ddd;
+    border: 1px solid#F69049;
+    color: #000;
     border-radius: 20px;
     background: white;
     cursor: pointer;
@@ -277,9 +283,11 @@
     }
 
     &.active {
-        background: #333;
+        background: #F69049;
+        ;
         color: white;
-        border-color: #333;
+        border-color: #F69049;
+        ;
     }
 
     @media (max-width: 768px) {

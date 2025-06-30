@@ -1,6 +1,7 @@
 import styles from './reserveHall.module.scss';
 import { useState, useEffect, useCallback } from 'react';
 import fotoHall from '../img/reserveHall.jpg';
+import ReserveModal from '../ReserveModal/reserveModal';
 
 const ReserveHall = ({ hallRef }) => {
     const [formData, setFormData] = useState({
@@ -33,11 +34,24 @@ const ReserveHall = ({ hallRef }) => {
         email: false,
         guests: false
     });
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+
+    const handlePhoneChange = useCallback((value) => {
+        let cleaned = value.replace(/[^\d+]/g, '');
+        if (!cleaned.startsWith('+7')) {
+            cleaned = '+7' + cleaned.replace(/^\+/, '');
+        }
+        if (cleaned.length > 12) {
+            cleaned = cleaned.substring(0, 12);
+        }
+        return cleaned;
+    }, []);
+
     const formatPhoneDisplay = useCallback((phone) => {
         if (!phone) return '+7';
-
-        const digits = phone.replace(/\D/g, '').substring(1); // Удаляем + и все нецифры
-
+        const digits = phone.replace(/\D/g, '').substring(1);
         if (digits.length === 0) return '+7';
         if (digits.length <= 3) return `+7 (${digits}`;
         if (digits.length <= 6) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3)}`;
@@ -51,7 +65,6 @@ const ReserveHall = ({ hallRef }) => {
         return '';
     }, []);
 
-    // Валидация полей
     const validateField = (name, value) => {
         switch (name) {
             case 'hall':
@@ -87,25 +100,30 @@ const ReserveHall = ({ hallRef }) => {
         }
     };
 
-    // Проверка всех полей при изменении
     useEffect(() => {
         const newErrors = { ...errors };
-        let key;
-        for (key in formData) {
+        for (const key in formData) {
             if (key in errors) {
                 newErrors[key] = validateField(key, formData[key]);
             }
         }
         setErrors(newErrors);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        if (name === 'phone') {
+            const formattedPhone = handlePhoneChange(value);
+            setFormData(prev => ({
+                ...prev,
+                [name]: formattedPhone
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
 
     const handleBlur = (e) => {
@@ -116,31 +134,64 @@ const ReserveHall = ({ hallRef }) => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const resetForm = () => {
+        setFormData({
+            hall: '',
+            date: '',
+            time: '',
+            name: '',
+            email: '',
+            phone: '+7',
+            guests: '',
+            comments: ''
+        });
+        setTouched({
+            hall: false,
+            date: false,
+            time: false,
+            name: false,
+            phone: false,
+            email: false,
+            guests: false
+        });
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        // Проверяем, есть ли ошибки
+        // Проверка всех полей перед отправкой
+        const newTouched = {};
+        Object.keys(touched).forEach(key => {
+            newTouched[key] = true;
+        });
+        setTouched(newTouched);
+
         const hasErrors = Object.values(errors).some(error => error !== '');
+        if (hasErrors) {
+            setIsSubmitting(false);
+            return;
+        }
 
-        if (!hasErrors) {
+        try {
+            // Здесь должна быть логика отправки данных на сервер
             console.log('Форма отправлена:', formData);
-            // Здесь будет логика отправки формы
-        } else {
-            console.log('Форма содержит ошибки');
-            // Помечаем все поля как touched для показа ошибок
-            setTouched({
-                hall: true,
-                date: true,
-                time: true,
-                name: true,
-                email: true,
-                phone: true,
-                guests: true
-            });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            setIsSuccess(true);
+            resetForm();
+
+            // Автоматическое закрытие уведомления через 3 секунды
+            setTimeout(() => {
+                setIsSuccess(false);
+            }, 3000);
+        } catch (error) {
+            console.error('Ошибка при отправке формы:', error);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    // Функция для определения класса поля
     const getFieldClass = (fieldName) => {
         if (!touched[fieldName]) return styles.input;
         return errors[fieldName] ? styles.inputError : styles.inputValid;
@@ -253,7 +304,6 @@ const ReserveHall = ({ hallRef }) => {
                             onChange={handleChange}
                             onBlur={(e) => {
                                 handleBlur(e);
-                                // Дополнительная валидация при потере фокуса
                                 if (formData.phone.length < 12) {
                                     setErrors(prev => ({
                                         ...prev,
@@ -301,7 +351,13 @@ const ReserveHall = ({ hallRef }) => {
                         />
                     </div>
 
-                    <button type="submit" className={styles.submitButton}>Предзаказ</button>
+                    <button
+                        type="submit"
+                        className={styles.submitButton}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? 'Отправка...' : 'Предзаказ'}
+                    </button>
                 </form>
             </div>
 
@@ -312,6 +368,9 @@ const ReserveHall = ({ hallRef }) => {
                     alt='Банкет Дали-Хинкали'
                 />
             </div>
+
+            {/* Уведомление об успешном бронировании */}
+            {isSuccess && <ReserveModal />}
         </div>
     )
 }

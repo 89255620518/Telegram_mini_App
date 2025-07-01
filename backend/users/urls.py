@@ -8,9 +8,9 @@ urlpatterns = [
     path('', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
     path('auth/token-email/',
-         TokenCreateView.as_view(),
-         name='token_email'
-         ),
+            TokenCreateView.as_view(),
+            name='token_email'
+        ),
     path(
         'auth/token-phone/',
         TokenCreateByPhoneView.as_view(),

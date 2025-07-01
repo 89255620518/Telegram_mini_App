@@ -1,34 +1,78 @@
 import styles from './login.module.scss';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import fotoGif from '../img/font.gif';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { api } from '../../../api/api';
 
 const LoginComponent = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        email: '',
+        login: '', // может быть email или телефон
         password: ''
     });
+    const [loginType, setLoginType] = useState('email'); // 'email' или 'phone'
     const [errors, setErrors] = useState({
-        email: '',
+        login: '',
         password: ''
     });
     const [touched, setTouched] = useState({
-        email: false,
+        login: false,
         password: false
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [authError, setAuthError] = useState('');
+
+    // Обработчик изменения номера телефона с форматированием
+    const handlePhoneChange = useCallback((value) => {
+        let cleaned = value.replace(/[^\d+]/g, '');
+
+        // Убедимся, что номер начинается с +7
+        if (!cleaned.startsWith('+7')) {
+            cleaned = '+7' + cleaned.replace(/^\+/, '');
+        }
+
+        // Ограничим длину номера
+        if (cleaned.length > 12) {
+            cleaned = cleaned.substring(0, 12);
+        }
+
+        return cleaned;
+    }, []);
+
+    // Форматирование номера телефона для отображения
+    const formatPhoneDisplay = useCallback((phone) => {
+        if (!phone) return '+7';
+        const digits = phone.replace(/\D/g, '').substring(1);
+
+        if (digits.length === 0) return '+7';
+        if (digits.length <= 3) return `+7 (${digits}`;
+        if (digits.length <= 6) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3)}`;
+        if (digits.length <= 8) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6)}`;
+        return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6, 8)}-${digits.substring(8, 10)}`;
+    }, []);
+
+    // Определяем тип логина (email или телефон)
+    useEffect(() => {
+        const isPhone = /^\+?[0-9\s\-()]+$/.test(formData.login);
+        setLoginType(isPhone ? 'phone' : 'email');
+    }, [formData.login]);
 
     const validate = useCallback(() => {
         const newErrors = {
-            email: '',
+            login: '',
             password: ''
         };
 
-        if (!formData.email.trim()) {
-            newErrors.email = 'Почта обязательна';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Некорректный формат почты';
+        if (!formData.login.trim()) {
+            newErrors.login = loginType === 'email'
+                ? 'Почта обязательна'
+                : 'Телефон обязателен';
+        } else if (loginType === 'email' && !/\S+@\S+\.\S+/.test(formData.login)) {
+            newErrors.login = 'Некорректный формат почты';
+        } else if (loginType === 'phone' && !/^\+7\d{10}$/.test(formData.login)) {
+            newErrors.login = 'Некорректный формат телефона (требуется +7XXXXXXXXXX)';
         }
 
         if (!formData.password) {
@@ -39,32 +83,30 @@ const LoginComponent = () => {
 
         setErrors(newErrors);
         return Object.keys(newErrors).every(key => !newErrors[key]);
-    }, [formData.email, formData.password]);
+    }, [formData.login, formData.password, loginType]);
 
     const handleChange = useCallback((e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
 
-        if (touched[name]) {
-            setErrors(prev => ({
+        if (name === 'login' && loginType === 'phone') {
+            const formattedPhone = handlePhoneChange(value);
+            setFormData(prev => ({
                 ...prev,
-                [name]: name === 'email'
-                    ? !value.trim()
-                        ? 'Почта обязательна'
-                        : !/\S+@\S+\.\S+/.test(value)
-                            ? 'Некорректный формат почты'
-                            : ''
-                    : !value
-                        ? 'Пароль обязателен'
-                        : value.length < 6
-                            ? 'Пароль должен быть не менее 6 символов'
-                            : ''
+                [name]: formattedPhone
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
             }));
         }
-    }, [touched]);
+
+        setAuthError('');
+
+        if (touched[name]) {
+            validate();
+        }
+    }, [touched, validate, loginType, handlePhoneChange]);
 
     const handleBlur = useCallback((e) => {
         const { name } = e.target;
@@ -75,18 +117,43 @@ const LoginComponent = () => {
         validate();
     }, [validate]);
 
-    const handleSubmit = useCallback((e) => {
+    const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
         setTouched({
-            email: true,
+            login: true,
             password: true
         });
+        setAuthError('');
 
-        if (validate()) {
-            console.log('Авторизация:', formData);
-            // Здесь можно добавить вызов API для авторизации
+        if (!validate()) return;
+
+        setIsSubmitting(true);
+        try {
+            const credentials = {
+                [loginType === 'email' ? 'email' : 'phone']:
+                    loginType === 'phone' ? formData.login.replace(/\D/g, '') : formData.login,
+                password: formData.password
+            };
+
+            // Используем единый метод login вместо loginByEmail/loginByPhone
+            const response = await api.users.login(credentials);
+
+            if (response.auth_token) {  // Для Django обычно 'auth_token' или 'token'
+                localStorage.setItem('token', response.auth_token);
+                await api.users.getMe();
+                navigate('/');
+            }
+        } catch (error) {
+            console.error('Ошибка авторизации:', error);
+            setAuthError(
+                error.response?.data?.non_field_errors?.[0] ||
+                error.response?.data?.detail ||
+                'Неверные учетные данные. Пожалуйста, попробуйте снова.'
+            );
+        } finally {
+            setIsSubmitting(false);
         }
-    }, [formData, validate]);
+    }, [formData, loginType, validate, navigate]);
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
@@ -94,11 +161,18 @@ const LoginComponent = () => {
 
     const getInputClass = (fieldName) => {
         return `${styles.input} ${touched[fieldName] && errors[fieldName]
-                ? styles.errorInput
-                : touched[fieldName]
-                    ? styles.validInput
-                    : ''
+            ? styles.errorInput
+            : touched[fieldName]
+                ? styles.validInput
+                : ''
             }`;
+    };
+
+    // Получаем отображаемое значение для поля ввода
+    const getDisplayValue = () => {
+        return loginType === 'phone'
+            ? formatPhoneDisplay(formData.login)
+            : formData.login;
     };
 
     return (
@@ -109,19 +183,25 @@ const LoginComponent = () => {
                 <h2 className={styles.title}>Авторизация</h2>
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.formGroup}>
-                        <label htmlFor="email" className={styles.label}>Почта</label>
+                        <label htmlFor="login" className={styles.label}>
+                            {loginType === 'email' ? 'Почта' : 'Телефон'}
+                        </label>
                         <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            className={getInputClass('email')}
-                            value={formData.email}
+                            type={loginType === 'email' ? 'email' : 'tel'}
+                            id="login"
+                            name="login"
+                            className={getInputClass('login')}
+                            value={getDisplayValue()}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            placeholder="example@mail.com"
+                            placeholder={
+                                loginType === 'email'
+                                    ? 'example@mail.com'
+                                    : '+7 (999) 123-45-67'
+                            }
                         />
-                        {touched.email && errors.email && (
-                            <span className={styles.errorText}>{errors.email}</span>
+                        {touched.login && errors.login && (
+                            <span className={styles.errorText}>{errors.login}</span>
                         )}
                     </div>
 
@@ -152,6 +232,12 @@ const LoginComponent = () => {
                         )}
                     </div>
 
+                    {authError && (
+                        <div className={styles.authError}>
+                            {authError}
+                        </div>
+                    )}
+
                     <div className={styles.infoAuth}>
                         <p className={styles.infoAuth_text}>Еще нет аккаунта?</p>
                         <Link to='/register' className={styles.registerLink}>Зарегистрируйтесь</Link>
@@ -160,9 +246,12 @@ const LoginComponent = () => {
                     <button
                         type="submit"
                         className={styles.submitButton}
-                        disabled={Object.values(errors).some(Boolean) && Object.values(touched).every(Boolean)}
+                        disabled={
+                            (Object.values(errors).some(Boolean) ||
+                                isSubmitting
+                            )}
                     >
-                        Войти
+                        {isSubmitting ? 'Вход...' : 'Войти'}
                     </button>
                 </form>
             </div>

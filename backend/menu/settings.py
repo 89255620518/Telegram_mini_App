@@ -8,17 +8,17 @@ SECRET_KEY = 'django-insecure-_4@)@(9#&fahh(=%*2@483+hz!e(dof_$m0+o&9wakb29z9bvs
 
 DEBUG = False
 
-if DEBUG:
-    ALLOWED_HOSTS = [
-        '*',
-        '127.0.0.1',
-        'localhost',
-    ]
-else:
-    ALLOWED_HOSTS = [
-        'dali-khinkali.ru',
-        '194.58.107.151',
-    ]
+# if DEBUG:
+ALLOWED_HOSTS = [
+    '*',
+    '127.0.0.1',
+    'localhost',
+]
+# else:
+#     ALLOWED_HOSTS = [
+#         'dali-khinkali.ru',
+#         '194.58.107.151',
+#     ]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -72,24 +72,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'menu.wsgi.application'
 
-if DEBUG:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+# if DEBUG:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'dali',
-            'USER': 'dali_user',
-            'PASSWORD': '20031956',
-            'HOST': '194.58.107.151',
-            'PORT': '5432'
-        }
-    }
+}
+# else:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.postgresql',
+#             'NAME': 'dali',
+#             'USER': 'dali_user',
+#             'PASSWORD': '20031956',
+#             'HOST': '194.58.107.151',
+#             'PORT': '5432'
+#         }
+#     }
 
 AUTH_PASSWORD_VALIDATORS = [
     {

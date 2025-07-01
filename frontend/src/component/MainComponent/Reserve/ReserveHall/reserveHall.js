@@ -1,6 +1,6 @@
 import styles from './reserveHall.module.scss';
 import { useState, useEffect, useCallback } from 'react';
-import fotoHall from '../img/reserveHall.jpg';
+import fotoHall from '../img/menu__hull.png';
 import ReserveModal from '../ReserveModal/reserveModal';
 
 const ReserveHall = ({ hallRef }) => {
@@ -108,7 +108,7 @@ const ReserveHall = ({ hallRef }) => {
             }
         }
         setErrors(newErrors);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData]);
 
     const handleChange = (e) => {

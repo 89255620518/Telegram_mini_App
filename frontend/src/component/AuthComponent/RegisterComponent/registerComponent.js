@@ -4,8 +4,15 @@ import fotoGif from '../img/font.gif';
 import { Link } from 'react-router-dom';
 import RegisterModal from '../RegisterModal/registerModal';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../../../api/api'
 
 const RegisterComponent = () => {
+    const [errors, setErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -14,11 +21,7 @@ const RegisterComponent = () => {
         lastName: '',
         phone: '+7'
     });
-    const [errors, setErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const navigate = useNavigate();
 
     const handlePhoneChange = useCallback((value) => {
         let cleaned = value.replace(/[^\d+]/g, '');
@@ -110,27 +113,86 @@ const RegisterComponent = () => {
         }
     }, [formData.password, formData.confirmPassword]);
 
-    const handleSubmit = useCallback((e) => {
+    const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
-        if (validate()) {
-            setIsSubmitting(true);
+        if (!validate()) return;
 
-            // Имитация запроса к API
-            setTimeout(() => {
-                console.log('Регистрация:', {
-                    ...formData,
-                    phone: formData.phone.replace(/\D/g, '')
-                });
-                setIsSuccess(true);
-                setIsSubmitting(false);
+        setIsSubmitting(true);
+        setErrors({});
 
-                // Автоматическое закрытие уведомления через 3 секунды
-                setTimeout(() => {
-                    setIsSuccess(false);
-                }, 3000);
-            }, 1000);
+        try {
+            const userData = {
+                email: formData.email,
+                password: formData.password,
+                re_password: formData.confirmPassword,
+                first_name: formData.firstName,
+                last_name: formData.lastName,
+                phone: formData.phone.startsWith('7')
+                    ? `+7${formData.phone.slice(1)}`
+                    : formData.phone
+            };
+
+            console.log('Отправка данных:', userData);
+
+            // Вызов API (аналогично вашему рабочему примеру)
+            const response = await api.users.register(userData);
+
+            // Обработка успешной регистрации
+            setIsSuccess(true);
+            console.log('Токен:', response.auth_token); // Проверьте структуру ответа
+
+            // Сохранение токена (если нужно)
+            if (response.auth_token) {
+                localStorage.setItem('auth_token', response.auth_token);
+            }
+
+            // Перенаправление или закрытие модального окна
+            setTimeout(() => navigate('/login'), 3000);
+
+        } catch (error) {
+            console.error('Полная ошибка регистрации:', error);
+
+            // Обрабатываем ошибку
+            const apiErrors = error.response?.data || {};
+            console.log('Детали ошибки от сервера:', apiErrors);
+
+            const formErrors = {};
+
+            // Обработка ошибок email
+            if (apiErrors.email) {
+                formErrors.email = Array.isArray(apiErrors.email)
+                    ? apiErrors.email.join(' ')
+                    : apiErrors.email;
+            } else if (apiErrors.email && apiErrors.email.includes('уже существует')) {
+                formErrors.email = 'Пользователь с таким email уже зарегистрирован';
+            }
+
+            // Обработка ошибок телефона
+            if (apiErrors.phone) {
+                formErrors.phone = Array.isArray(apiErrors.phone)
+                    ? apiErrors.phone.join(' ')
+                    : apiErrors.phone;
+            } else if (apiErrors.phone && apiErrors.phone.includes('уже существует')) {
+                formErrors.phone = 'Этот номер телефона уже используется';
+            }
+
+            // Общие ошибки
+            if (apiErrors.non_field_errors) {
+                formErrors.general = Array.isArray(apiErrors.non_field_errors)
+                    ? apiErrors.non_field_errors.join(' ')
+                    : apiErrors.non_field_errors;
+            }
+
+            // Если не получили конкретных ошибок от сервера
+            if (Object.keys(formErrors).length === 0) {
+                formErrors.general = 'Произошла ошибка при регистрации. Пожалуйста, проверьте введенные данные.';
+            }
+
+            setErrors(formErrors);
+        } finally {
+            setIsSubmitting(false);
         }
-    }, [formData, validate]);
+    }, [formData, validate, navigate]);
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
@@ -146,6 +208,11 @@ const RegisterComponent = () => {
 
             <div className={styles.registerCard}>
                 <h2 className={styles.title}>Регистрация</h2>
+                {errors.general && (
+                    <div className={styles.errorGeneral}>
+                        {errors.general}
+                    </div>
+                )}
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.twoColumns}>
                         <div className={styles.column}>

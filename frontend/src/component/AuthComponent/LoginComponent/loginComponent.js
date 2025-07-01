@@ -4,14 +4,17 @@ import fotoGif from '../img/font.gif';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { api } from '../../../api/api';
+import { useAuth } from '../AuthContext'; // Импортируем контекст
 
 const LoginComponent = () => {
     const navigate = useNavigate();
+    const { login: authLogin } = useAuth();
+
     const [formData, setFormData] = useState({
-        login: '', // может быть email или телефон
+        login: '',
         password: ''
     });
-    const [loginType, setLoginType] = useState('email'); // 'email' или 'phone'
+    const [loginType, setLoginType] = useState('email');
     const [errors, setErrors] = useState({
         login: '',
         password: ''
@@ -135,11 +138,11 @@ const LoginComponent = () => {
                 password: formData.password
             };
 
-            // Используем единый метод login вместо loginByEmail/loginByPhone
             const response = await api.users.login(credentials);
 
-            if (response.auth_token) {  // Для Django обычно 'auth_token' или 'token'
-                localStorage.setItem('token', response.auth_token);
+            if (response.auth_token) {
+                // Сохраняем токен через AuthContext вместо прямого сохранения в localStorage
+                authLogin(response.auth_token);
                 await api.users.getMe();
                 navigate('/');
             }
@@ -153,7 +156,7 @@ const LoginComponent = () => {
         } finally {
             setIsSubmitting(false);
         }
-    }, [formData, loginType, validate, navigate]);
+    }, [formData, loginType, validate, navigate, authLogin]);
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);

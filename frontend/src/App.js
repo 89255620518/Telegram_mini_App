@@ -18,6 +18,7 @@ import VozvratPage from './pages/vozvrat';
 import KonfidiPage from './pages/konfidi';
 import BiznesLanchPage from './pages/biznesLanch';
 import AdditionalServicesPage from './pages/additionalServices';
+import { AuthProvider } from './component/AuthComponent/AuthContext';
 
 const routes = [
   // { path: '/admin', element: <AdminPage /> },
@@ -53,45 +54,47 @@ function App() {
   }, []);
 
   return (
-    <TelegramWebAppInit>
-      <Helmet>
-        <title>Дали-Хинкали кафе грузинской кухни с летней верандой</title>
-        <meta name="description" content="БВ Дали-Хинкали бесплатная доставка по Орехово-Зуевскому району" />
-        <meta name="yandex-verification" content="c2e397d2d61662dc" />
-      </Helmet>
+    <AuthProvider>
+      <TelegramWebAppInit>
+        <Helmet>
+          <title>Дали-Хинкали кафе грузинской кухни с летней верандой</title>
+          <meta name="description" content="БВ Дали-Хинкали бесплатная доставка по Орехово-Зуевскому району" />
+          <meta name="yandex-verification" content="c2e397d2d61662dc" />
+        </Helmet>
 
-      <Router>
-        <Header
-          modalOpen={modalOpen}
-          modalClosed={modalClosed}
-          isModalOpen={isModalOpen}
-          tableRef={tableRef}
-          hallRef={hallRef}
-          taxiRef={taxiRef}
-          deliveryRef={deliveryRef}
-          contactsRef={contactsRef}
-        />
-
-        <Routes>
-          <Route
-            path="/"
-            element={<HomePage
-              tableRef={tableRef}
-              hallRef={hallRef}
-              taxiRef={taxiRef}
-              deliveryRef={deliveryRef}
-              contactsRef={contactsRef}
-            />}
-            description="В Дали-Хинкали бесплатная доставка по Орехово-Зуевскому району"
+        <Router>
+          <Header
+            modalOpen={modalOpen}
+            modalClosed={modalClosed}
+            isModalOpen={isModalOpen}
+            tableRef={tableRef}
+            hallRef={hallRef}
+            taxiRef={taxiRef}
+            deliveryRef={deliveryRef}
+            contactsRef={contactsRef}
           />
-          {routes.map((route, index) => (
-            <Route key={index} path={route.path} element={route.element} />
-          ))}
-        </Routes>
 
-        <Footer contactsRef={contactsRef} />
-      </Router>
-    </TelegramWebAppInit>
+          <Routes>
+            <Route
+              path="/"
+              element={<HomePage
+                tableRef={tableRef}
+                hallRef={hallRef}
+                taxiRef={taxiRef}
+                deliveryRef={deliveryRef}
+                contactsRef={contactsRef}
+              />}
+              description="В Дали-Хинкали бесплатная доставка по Орехово-Зуевскому району"
+            />
+            {routes.map((route, index) => (
+              <Route key={index} path={route.path} element={route.element} />
+            ))}
+          </Routes>
+
+          <Footer contactsRef={contactsRef} />
+        </Router>
+      </TelegramWebAppInit>
+    </AuthProvider>
   );
 }
 

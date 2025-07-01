@@ -1,175 +1,250 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthComponent/AuthContext';
+import { api } from '../../api/api';
 import styles from './cabinet.module.scss';
 
 const CabinetComponent = () => {
-    // Данные пользователя
+    const navigate = useNavigate();
+    const { token, logout: authLogout } = useAuth();
+
     const [userData, setUserData] = useState({
-        firstName: 'Иван',
-        lastName: 'Иванов',
-        phone: '+7 (123) 456-78-90',
-        email: 'ivan@example.com',
-        avatar: 'https://via.placeholder.com/150',
+        first_name: '',
+        last_name: '',
+        phone: '',
+        email: '',
+        delivery_address: '',
+        floor: '',
+        intercom: '',
+        comment: ''
     });
 
-    // Адрес пользователя
-    const [userAddress, setUserAddress] = useState({
-        city: 'Москва',
-        street: 'Ленина',
-        house: '10',
-        apartment: '25',
-        entrance: '3',
-        intercom: '1234',
-        comment: 'Оставить у двери',
-    });
-
-    // Заказы пользователя
-    // eslint-disable-next-line no-unused-vars
-    const [orders, setOrders] = useState([
-        {
-            id: 1,
-            date: '2023-05-15',
-            items: ['Товар 1', 'Товар 2', 'Товар 3'],
-            total: 12500,
-        },
-        {
-            id: 2,
-            date: '2023-06-20',
-            items: ['Товар 4', 'Товар 5'],
-            total: 8700,
-        },
-    ]);
-
-    // Состояния модальных окон
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [isDataModalOpen, setIsDataModalOpen] = useState(false);
-    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
     const [isOrdersOpen, setIsOrdersOpen] = useState(false);
 
-    // Обработчики изменений данных
-    const handleDataChange = (e) => {
+    // Функции для работы с телефоном
+    const handlePhoneChange = useCallback((value) => {
+        let cleaned = value.replace(/[^\d+]/g, '');
+        if (!cleaned.startsWith('+7')) {
+            cleaned = '+7' + cleaned.replace(/^\+/, '');
+        }
+        if (cleaned.length > 12) {
+            cleaned = cleaned.substring(0, 12);
+        }
+        return cleaned;
+    }, []);
+
+    const formatPhoneDisplay = useCallback((phone) => {
+        if (!phone) return '+7';
+        const digits = phone.replace(/\D/g, '').substring(1);
+        if (digits.length === 0) return '+7';
+        if (digits.length <= 3) return `+7 (${digits}`;
+        if (digits.length <= 6) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3)}`;
+        if (digits.length <= 8) return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6)}`;
+        return `+7 (${digits.substring(0, 3)}) ${digits.substring(3, 6)}-${digits.substring(6, 8)}-${digits.substring(8, 10)}`;
+    }, []);
+
+    const handleChange = useCallback((e) => {
         const { name, value } = e.target;
-        setUserData(prev => ({ ...prev, [name]: value }));
+
+        if (name === 'phone') {
+            const formattedPhone = handlePhoneChange(value);
+            setUserData(prev => ({
+                ...prev,
+                [name]: formattedPhone
+            }));
+        } else {
+            setUserData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
+    }, [handlePhoneChange]);
+
+    // Загрузка данных пользователя
+    useEffect(() => {
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        const fetchUserData = async () => {
+            try {
+                setLoading(true);
+                const response = await api.users.getMe();
+
+                setUserData({
+                    first_name: response.first_name || '',
+                    last_name: response.last_name || '',
+                    phone: response.phone || '',
+                    email: response.email || '',
+                    delivery_address: response.delivery_address || '',
+                    floor: response.floor || '',
+                    intercom: response.intercom || '',
+                    comment: response.comment || ''
+                });
+
+                // Загрузка заказов
+                const ordersResponse = await api.users.getMe(); // временно
+                setOrders(ordersResponse.orders || []);
+            } catch (err) {
+                console.error('Ошибка загрузки данных:', err);
+                setError('Не удалось загрузить данные пользователя');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserData();
+    }, [token, navigate]);
+
+    const handleSaveData = async () => {
+        try {
+            await api.users.updateMe(userData);
+            setIsDataModalOpen(false);
+        } catch (err) {
+            console.error('Ошибка сохранения:', err);
+            setError(err.response?.data?.phone?.[0] ||
+                err.response?.data?.email?.[0] ||
+                'Не удалось сохранить изменения');
+        }
     };
 
-    // Обработчики изменений адреса
-    const handleAddressChange = (e) => {
-        const { name, value } = e.target;
-        setUserAddress(prev => ({ ...prev, [name]: value }));
-    };
-
-    // Сохранение данных
-    const handleSaveData = () => {
-        // Здесь можно добавить логику сохранения на сервер
-        setIsDataModalOpen(false);
-    };
-
-    // Сохранение адреса
-    const handleSaveAddress = () => {
-        // Здесь можно добавить логику сохранения на сервер
-        setIsAddressModalOpen(false);
-    };
-
-    // Выход из аккаунта
     const handleLogout = () => {
-        // Логика выхода
-        console.log('Пользователь вышел');
+        authLogout();
+        navigate('/');
     };
+
+    if (loading) {
+        return <div className={styles.loading}>Загрузка данных...</div>;
+    }
+
+    if (error) {
+        return <div className={styles.error}>{error}</div>;
+    }
 
     return (
         <div className={styles.containerCabinet}>
-            {/* Шапка профиля */}
             <div className={styles.profileHeader}>
-
-                <h2 className={styles.userName}>
-                    {userData.firstName} {userData.lastName}
-                </h2>
+                <h2>{userData.first_name} {userData.last_name}</h2>
+                <p>{userData.email}</p>
+                <p>{formatPhoneDisplay(userData.phone)}</p>
             </div>
 
-            {/* Меню личного кабинета */}
             <div className={styles.menu}>
-                <button
-                    className={styles.menuButton}
-                    onClick={() => setIsDataModalOpen(true)}
-                >
-                    <span className={styles.icon}>👤</span>
-                    <span className={styles.menuButton_span}>Мои данные</span>
+                <button onClick={() => setIsDataModalOpen(true)} className={styles.menuButton}>
+                    <span className={styles.icon}>🤵</span>
+                    <span>Редактировать профиль</span>
                 </button>
 
                 <button
-                    className={styles.menuButton}
-                    onClick={() => setIsAddressModalOpen(true)}
-                >
-                    <span className={styles.icon}>🏠</span>
-                    <span className={styles.menuButton_span}>Мой адрес</span>
-                </button>
-
-                <button
-                    className={styles.menuButton}
                     onClick={() => setIsOrdersOpen(!isOrdersOpen)}
+                    className={styles.menuButton}
                 >
                     <span className={styles.icon}>📦</span>
-                    <span className={styles.menuButton_span}>Мои заказы</span>
+                    <span>Мои заказы ({orders.length})</span>
                 </button>
 
                 <button
-                    className={`${styles.menuButton} ${styles.logoutButton}`}
                     onClick={handleLogout}
+                    className={`${styles.menuButton} ${styles.logoutButton}`}
                 >
                     <span className={styles.icon}>🚪</span>
-                    <span className={styles.menuButton_span}>Выйти</span>
+                    <span>Выйти</span>
                 </button>
             </div>
 
-            {/* Модальное окно "Мои данные" */}
             {isDataModalOpen && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.modal}>
-                        <h3 className={styles.modal_h3}>Мои данные</h3>
+                        <h3>Редактирование профиля</h3>
+
                         <div className={styles.formGroup}>
-                            <label>Имя</label>
+                            <label>Имя *</label>
                             <input
                                 type="text"
-                                name="firstName"
-                                value={userData.firstName}
-                                onChange={handleDataChange}
+                                name="first_name"
+                                value={userData.first_name}
+                                onChange={handleChange}
+                                required
                             />
                         </div>
+
                         <div className={styles.formGroup}>
                             <label>Фамилия</label>
                             <input
                                 type="text"
-                                name="lastName"
-                                value={userData.lastName}
-                                onChange={handleDataChange}
+                                name="last_name"
+                                value={userData.last_name}
+                                onChange={handleChange}
                             />
                         </div>
+
                         <div className={styles.formGroup}>
-                            <label>Телефон</label>
+                            <label>Телефон *</label>
                             <input
                                 type="tel"
                                 name="phone"
-                                value={userData.phone}
-                                onChange={handleDataChange}
+                                value={formatPhoneDisplay(userData.phone)}
+                                onChange={handleChange}
+                                required
                             />
                         </div>
+
                         <div className={styles.formGroup}>
-                            <label>Почта</label>
+                            <label>Адрес доставки</label>
                             <input
-                                type="email"
-                                name="email"
-                                value={userData.email}
-                                onChange={handleDataChange}
+                                type="text"
+                                name="delivery_address"
+                                value={userData.delivery_address}
+                                onChange={handleChange}
                             />
                         </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Этаж</label>
+                            <input
+                                type="number"
+                                name="floor"
+                                value={userData.floor}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Домофон</label>
+                            <input
+                                type="text"
+                                name="intercom"
+                                value={userData.intercom}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Комментарий</label>
+                            <textarea
+                                className={styles.formGroup_textarea}
+                                name="comment"
+                                value={userData.comment}
+                                onChange={handleChange}
+                            />
+                        </div>
+
                         <div className={styles.modalButtons}>
                             <button
-                                className={styles.cancelButton}
                                 onClick={() => setIsDataModalOpen(false)}
+                                className={styles.cancelButton}
                             >
                                 Отмена
                             </button>
                             <button
-                                className={styles.saveButton}
                                 onClick={handleSaveData}
+                                className={styles.saveButton}
+                                disabled={!userData.first_name || !userData.phone}
                             >
                                 Сохранить
                             </button>
@@ -178,114 +253,33 @@ const CabinetComponent = () => {
                 </div>
             )}
 
-            {/* Модальное окно "Мой адрес" */}
-            {isAddressModalOpen && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modal}>
-                        <h3 className={styles.modal_h3}>Мой адрес</h3>
-                        <div className={styles.formGroup}>
-                            <label>Город</label>
-                            <input
-                                type="text"
-                                name="city"
-                                value={userAddress.city}
-                                onChange={handleAddressChange}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Улица</label>
-                            <input
-                                type="text"
-                                name="street"
-                                value={userAddress.street}
-                                onChange={handleAddressChange}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Дом</label>
-                            <input
-                                type="text"
-                                name="house"
-                                value={userAddress.house}
-                                onChange={handleAddressChange}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Квартира</label>
-                            <input
-                                type="text"
-                                name="apartment"
-                                value={userAddress.apartment}
-                                onChange={handleAddressChange}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Подъезд</label>
-                            <input
-                                type="text"
-                                name="entrance"
-                                value={userAddress.entrance}
-                                onChange={handleAddressChange}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Домофон</label>
-                            <input
-                                type="text"
-                                name="intercom"
-                                value={userAddress.intercom}
-                                onChange={handleAddressChange}
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Комментарий</label>
-                            <input
-                                type="text"
-                                name="comment"
-                                value={userAddress.comment}
-                                onChange={handleAddressChange}
-                            />
-                        </div>
-                        <div className={styles.modalButtons}>
-                            <button
-                                className={styles.cancelButton}
-                                onClick={() => setIsAddressModalOpen(false)}
-                            >
-                                Отмена
-                            </button>
-                            <button
-                                className={styles.saveButton}
-                                onClick={handleSaveAddress}
-                            >
-                                Сохранить изменения
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Блок "Мои заказы" */}
             {isOrdersOpen && (
                 <div className={styles.ordersSection}>
-                    <h3 className={styles.modal_h3}>Мои заказы</h3>
+                    <h3>История заказов</h3>
                     {orders.length > 0 ? (
                         <div className={styles.ordersList}>
                             {orders.map(order => (
                                 <div key={order.id} className={styles.orderItem}>
                                     <div className={styles.orderHeader}>
-                                        <span className={styles.orderDate}>Дата: {order.date}</span>
-                                        <span className={styles.orderTotal}>Сумма: {order.total} ₽</span>
+                                        <span>Заказ #{order.id}</span>
+                                        <span>{new Date(order.created_at).toLocaleDateString()}</span>
+                                        <span>{order.total_price} ₽</span>
                                     </div>
-                                    <ul className={styles.orderItems}>
+                                    <div className={styles.orderStatus}>
+                                        Статус: {order.status}
+                                    </div>
+                                    <div className={styles.orderProducts}>
                                         {order.items.map((item, index) => (
-                                            <li key={index}>{item}</li>
+                                            <div key={index} className={styles.orderProduct}>
+                                                {item.name} × {item.quantity} ({item.price} ₽)
+                                            </div>
                                         ))}
-                                    </ul>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <p className={styles.noOrders}>Нет заказов</p>
+                        <p className={styles.noOrders}>Вы еще не сделали ни одного заказа</p>
                     )}
                 </div>
             )}

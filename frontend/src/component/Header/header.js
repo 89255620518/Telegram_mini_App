@@ -2,6 +2,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import styles from './header.module.scss';
 import logo from '../../image/logo.1.png';
 import { useState, useEffect } from 'react';
+import { useAuth } from '../AuthComponent/AuthContext';
 
 const Header = ({
     modalOpen,
@@ -16,9 +17,10 @@ const Header = ({
 }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     // eslint-disable-next-line no-unused-vars
-    const [isAuth, setIsAuth] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const { token } = useAuth();
+
 
     useEffect(() => {
         const handleResize = () => {
@@ -113,10 +115,10 @@ const Header = ({
                     <img src={logo} alt='Логотип Дали-Хинкали' className={styles.logo} />
                 </Link>
 
-                {isAuth ? (
+                {token ? (
                     <>
-                        <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>👤</Link>
                         <Link to="/basket" onClick={modalClosed} className={styles.iconButton}>🛒</Link>
+                        <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>🤵</Link>
                     </>
                 ) : (
                     <>

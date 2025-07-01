@@ -6,6 +6,7 @@ import DeliveryComponent from "../component/MainComponent/Delivery/deliveryCompo
 import DeliveryRulesComponent from "../component/MainComponent/DeliveryRules/deliveryRules";
 import ReserveHall from "../component/MainComponent/Reserve/ReserveHall/reserveHall";
 import TaxiComponent from "../component/MainComponent/TaxiComponent/taxiComponent";
+import { useEffect } from 'react';
 
 const HomePage = ({
     tableRef,
@@ -13,6 +14,26 @@ const HomePage = ({
     taxiRef,
     deliveryRef
 }) => {
+
+    useEffect(() => {
+        // Проверяем параметры URL после монтирования компонента
+        const searchParams = new URLSearchParams(window.location.search);
+        const section = searchParams.get('section');
+        
+        // Определяем соответствующий ref в зависимости от значения section
+        let targetRef;
+        if (section === 'reserve') targetRef = tableRef;
+        else if (section === 'hall') targetRef = hallRef;
+        else if (section === 'taxi') targetRef = taxiRef;
+        
+        // Если ref существует и он привязан к элементу, скроллим к нему
+        if (targetRef && targetRef.current) {
+            targetRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    }, [tableRef, hallRef, taxiRef]);
 
     return (
         <div style={{ background: "#ffffff" }}>

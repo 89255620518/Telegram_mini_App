@@ -24,26 +24,31 @@ export class UsersAPI {
   }
 
   sendOrder(data) {
-    return this.api.post('/users/send-order/', data);
+    return this.api.post('/send-order/', data);
   }
 
   sendPreorder(data) {
-    return this.api.post('/users/send-preorder/', data);
+    return this.api.post('/send-preorder/', data);
   }
 
-  sendBanquet(data) {
-    return this.api.post('/users/send-banquet/', data);
+  sendBanquet(data, token) {
+    return this.api.post('/send-banquet/', data, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
   }
 
   sendHookah(data) {
-    return this.api.post('/users/send-hookah/', data);
+    return this.api.post('/send-hookah/', data);
   }
 
   processPayment(data) {
-    return this.api.post('/users/payment/', data);
+    return this.api.post('/payment/', data);
   }
 
   callTaxi(data) {
-    return this.api.post('/users/send-taxi/', data);
+    return this.api.post('/send-taxi/', data);
   }
 }

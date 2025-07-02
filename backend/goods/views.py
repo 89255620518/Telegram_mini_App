@@ -9,12 +9,12 @@ from rest_framework.validators import ValidationError
 
 from .filters import GoodsFilter
 from .models import (Favorite, Goods, Order, OrderItem, Reservation,
-                     ShoppingCart)
+                        ShoppingCart)
 from .pagination import CustomPagination
 from .permissions import IsAdminOrReadOnly
 from .serializers import (FavoriteSerializer, GoodsSerializer, OrderSerializer,
-                          ReservationSerializer, ShoppingCartSerializer,
-                          ShortGoodsSerializer)
+                            ReservationSerializer, ShoppingCartSerializer,
+                            ShortGoodsSerializer)
 
 
 class GoodsViewSet(viewsets.ModelViewSet):
@@ -121,7 +121,7 @@ class GoodsViewSet(viewsets.ModelViewSet):
             total_price += item.price
             order_items_to_create.append(
                 OrderItem(order=None, goods=item.goods, count=item.count,
-                          price=item.price))
+                    price=item.price))
 
         total_price += delivery_cost
 

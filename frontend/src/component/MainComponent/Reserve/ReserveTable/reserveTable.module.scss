@@ -140,3 +140,26 @@
         cursor: not-allowed;
     }
 }
+
+.authMessage {
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: #fff3cd;
+    color: #856404;
+    border-radius: 4px;
+    text-align: center;
+    border: 1px solid #ffeeba;
+    display: flex;
+    gap: 5px;
+    flex-direction: column;
+}
+
+.authLink {
+    color: #0056b3;
+    text-decoration: underline;
+    font-weight: bold;
+    
+    &:hover {
+        color: #003d7a;
+    }
+}

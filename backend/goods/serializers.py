@@ -1,7 +1,7 @@
 from rest_framework import serializers, validators
 
 from .models import (Favorite, Goods, Image, Order, OrderItem, Reservation,
-                     ShoppingCart)
+                    ShoppingCart)
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -153,6 +153,7 @@ class ReservationSerializer(serializers.ModelSerializer):
             'table_number',
             'date_time',
             'num_people',
+            'email',
             'name',
             'phone',
             'comment',

@@ -3,57 +3,61 @@ import { useState, useEffect, useCallback } from 'react';
 import Zal from './Zal/zal';
 import Veranda from './Veranda/veranda';
 import ReserveModal from '../ReserveModal/reserveModal';
+import { api } from '../../../../api/api';
+import { useAuth } from '../../../AuthComponent/AuthContext';
+import { Link } from 'react-router-dom';
 
 const ReserveTable = ({ tableRef }) => {
+    const { token } = useAuth();
     const [currentModal, setCurrentModal] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [authMessage, setAuthMessage] = useState('');
     const [formData, setFormData] = useState({
-        hall: '',
-        table: '',
-        date: '',
-        time: '',
+        room_type: '',
+        table_number: '',
+        date_time: '',
+        num_people: '',
         name: '',
         email: '',
         phone: '+7',
-        guests: '',
-        comments: ''
+        comment: ''
     });
 
     const [errors, setErrors] = useState({
-        hall: '',
-        table: '',
-        date: '',
-        time: '',
+        room_type: '',
+        table_number: '',
+        date_time: '',
+        num_people: '',
         name: '',
         email: '',
-        phone: '+7',
-        guests: ''
+        phone: '+7'
     });
 
     const [touched, setTouched] = useState({
-        hall: false,
-        table: false,
-        date: false,
-        time: false,
+        room_type: false,
+        table_number: false,
+        date_time: false,
+        num_people: false,
         name: false,
         phone: false,
-        email: false,
-        guests: false
+        email: false
     });
 
+    // Обработчик выбора стола
     const handleTableSelect = useCallback((tableNumber) => {
         setFormData(prev => ({
             ...prev,
-            table: tableNumber
+            table_number: tableNumber
         }));
         setTouched(prev => ({
             ...prev,
-            table: true
+            table_number: true
         }));
     }, []);
 
+    // Форматирование и валидация телефона
     const handlePhoneChange = useCallback((value) => {
         let cleaned = value.replace(/[^\d+]/g, '');
         if (!cleaned.startsWith('+7')) {
@@ -81,24 +85,27 @@ const ReserveTable = ({ tableRef }) => {
         return '';
     }, []);
 
+    // Валидация полей
     const validateField = (name, value) => {
         switch (name) {
-            case 'hall':
-                return value !== '' ? '' : 'Пожалуйста, выберите зал';
-            case 'table':
-                return value !== '' ? '' : 'Пожалуйста, выберите стол';
-            case 'date':
-                if (value === '') return 'Пожалуйста, выберите дату';
-                if (new Date(value) < new Date(new Date().setHours(0, 0, 0, 0))) {
-                    return 'Дата не может быть в прошлом';
+            case 'room_type':
+                return value ? '' : 'Пожалуйста, выберите зал';
+            case 'table_number':
+                return value ? '' : 'Пожалуйста, выберите стол';
+            case 'date_time':
+                if (!value) return 'Пожалуйста, выберите дату и время';
+                const [datePart, timePart] = value.split(' ');
+                const [year, month, day] = datePart.split('-').map(Number);
+                const [hours, minutes] = timePart.split(':').map(Number);
+                const selectedDate = new Date(year, month - 1, day, hours, minutes);
+
+                if (selectedDate < new Date()) {
+                    return 'Дата и время не могут быть в прошлом';
                 }
-                return '';
-            case 'time':
-                if (value === '') return 'Пожалуйста, выберите время';
-                const [hours, minutes] = value.split(':').map(Number);
+
                 const totalMinutes = hours * 60 + minutes;
                 if (totalMinutes >= 22 * 60 || totalMinutes < 11 * 60) {
-                    return 'Заведение не работает в это время (Можно забронировать с 11:00 до 22:00)';
+                    return 'Заведение работает с 11:00 до 22:00';
                 }
                 return '';
             case 'name':
@@ -107,50 +114,64 @@ const ReserveTable = ({ tableRef }) => {
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? '' : 'Пожалуйста, введите корректный email';
             case 'phone':
                 return validatePhone(value);
-            case 'guests':
-                if (value === '') return 'Пожалуйста, укажите количество гостей';
+            case 'num_people':
+                if (!value) return 'Пожалуйста, укажите количество гостей';
                 const num = Number(value);
-                return !isNaN(num) && num >= 1 && num <= 30
-                    ? ''
-                    : 'Пожалуйста, введите число от 1 до 30';
+                return num >= 1 && num <= 30 ? '' : 'Введите число от 1 до 30';
             default:
                 return '';
         }
     };
 
+    // Автоматическая валидация при изменении данных
     useEffect(() => {
-        const newErrors = { ...errors };
-        let key;
-        for (key in formData) {
+        const newErrors = {};
+        Object.keys(formData).forEach(key => {
             if (key in errors) {
                 newErrors[key] = validateField(key, formData[key]);
             }
-        }
+        });
         setErrors(newErrors);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData]);
 
+    // Обработчик изменений в форме
     const handleChange = (e) => {
         const { name, value } = e.target;
+
         if (name === 'phone') {
             const formattedPhone = handlePhoneChange(value);
             setFormData(prev => ({
                 ...prev,
                 [name]: formattedPhone
             }));
-        } else {
+        }
+        else if (name === 'date' || name === 'time') {
+            // Объединяем дату и время для отправки на бэкенд
+            const newFormData = { ...formData };
+            if (name === 'date') newFormData.date = value;
+            if (name === 'time') newFormData.time = value;
+
+            if (newFormData.date && newFormData.time) {
+                newFormData.date_time = `${newFormData.date} ${newFormData.time}:00`;
+            }
+
+            setFormData(newFormData);
+        }
+        else {
             setFormData(prev => ({
                 ...prev,
                 [name]: value
             }));
         }
 
-        if (name === 'hall') {
-            setFormData(prev => ({ ...prev, table: '' }));
-            if (value === 'Основной зал') {
+        // Открываем модальное окно для выбора стола при выборе зала
+        if (name === 'room_type') {
+            setFormData(prev => ({ ...prev, table_number: '' }));
+            if (value === 'hall') {
                 setCurrentModal('zal');
                 setIsModalOpen(true);
-            } else if (value === 'Веранда') {
+            } else if (value === 'veranda') {
                 setCurrentModal('veranda');
                 setIsModalOpen(true);
             } else {
@@ -173,41 +194,51 @@ const ReserveTable = ({ tableRef }) => {
         }));
     };
 
+    // Сброс формы
     const resetForm = useCallback(() => {
         setFormData({
-            hall: '',
-            table: '',
-            date: '',
-            time: '',
+            room_type: '',
+            table_number: '',
+            date_time: '',
+            num_people: '',
             name: '',
             email: '',
             phone: '+7',
-            guests: '',
-            comments: ''
+            comment: ''
         });
         setTouched({
-            hall: false,
-            table: false,
-            date: false,
-            time: false,
+            room_type: false,
+            table_number: false,
+            date_time: false,
+            num_people: false,
             name: false,
             phone: false,
-            email: false,
-            guests: false
+            email: false
         });
     }, []);
 
+    // Отправка формы
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Проверка всех полей перед отправкой
+        //Проверка авторизации
+        if (!token) {
+            setAuthMessage('Для бронирования стола необходимо авторизоваться');
+            setIsSubmitting(false);
+            return;
+        } else {
+            setAuthMessage(''); // Сбрасываем сообщение если пользователь авторизован
+        }
+
+        // Проверка всех полей
         const newTouched = {};
         Object.keys(touched).forEach(key => {
             newTouched[key] = true;
         });
         setTouched(newTouched);
 
+        // Проверка ошибок
         const hasErrors = Object.values(errors).some(error => error !== '');
         if (hasErrors) {
             setIsSubmitting(false);
@@ -215,28 +246,47 @@ const ReserveTable = ({ tableRef }) => {
         }
 
         try {
-            // Здесь должна быть логика отправки данных на сервер
-            console.log('Форма отправлена:', formData);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const reservationData = {
+                room_type: formData.room_type,
+                table_number: formData.table_number,
+                date_time: formData.date_time,
+                num_people: Number(formData.num_people),
+                name: formData.name,
+                email: formData.email.trim(),
+                phone: formData.phone,
+                comment: formData.comment || ''
+            };
+
+            await api.goods.createReservation(reservationData, token);
 
             setIsSuccess(true);
             resetForm();
 
-            // Автоматическое закрытие уведомления через 3 секунды
             setTimeout(() => {
                 setIsSuccess(false);
             }, 3000);
         } catch (error) {
-            console.error('Ошибка при отправке формы:', error);
+            console.error('Ошибка при бронировании:', error);
+            if (error.response) {
+                console.error('Детали ошибки:', error.response.data);
+                alert(`Ошибка бронирования: ${error.response.data.message || error.response.data.error || 'Неизвестная ошибка'}`);
+            } else {
+                alert('Произошла ошибка при бронировании. Пожалуйста, попробуйте позже.');
+            }
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    // Получение класса для поля ввода в зависимости от валидности
     const getFieldClass = (fieldName) => {
         if (!touched[fieldName]) return styles.input;
         return errors[fieldName] ? styles.inputError : styles.inputValid;
     };
+
+    // Разделение даты и времени для отображения в форме
+    const dateValue = formData.date_time ? formData.date_time.split(' ')[0] : '';
+    const timeValue = formData.date_time ? formData.date_time.split(' ')[1]?.substring(0, 5) : '';
 
     return (
         <div className={styles.containerReserveTable} ref={tableRef}>
@@ -244,50 +294,50 @@ const ReserveTable = ({ tableRef }) => {
             <div className={styles.content}>
                 <form className={styles.form} onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
-                        <label htmlFor="hall" className={styles.label}>Зал / Веранда: *</label>
+                        <label htmlFor="room_type" className={styles.label}>Зал / Веранда: *</label>
                         <select
-                            id="hall"
-                            name="hall"
-                            value={formData.hall}
+                            id="room_type"
+                            name="room_type"
+                            value={formData.room_type}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            className={getFieldClass('hall')}
+                            className={getFieldClass('room_type')}
                             required
                         >
                             <option value="">Выберите</option>
-                            <option value="Основной зал">Зал</option>
-                            <option value="Веранда">Веранда</option>
+                            <option value="hall">Зал</option>
+                            <option value="veranda">Веранда</option>
                         </select>
-                        {touched.hall && errors.hall && (
-                            <span className={styles.errorMessage}>{errors.hall}</span>
+                        {touched.room_type && errors.room_type && (
+                            <span className={styles.errorMessage}>{errors.room_type}</span>
                         )}
                     </div>
 
                     {/* Поле для отображения выбранного стола */}
-                    {formData.hall && (
+                    {formData.room_type && (
                         <div className={styles.formGroup}>
-                            <label htmlFor="table" className={styles.label}>Выбранный стол: *</label>
+                            <label htmlFor="table_number" className={styles.label}>Выбранный стол: *</label>
                             <input
                                 type="text"
-                                id="table"
-                                name="table"
-                                value={formData.table ? `Стол №${formData.table}` : ''}
+                                id="table_number"
+                                name="table_number"
+                                value={formData.table_number ? `Стол №${formData.table_number}` : ''}
                                 readOnly
                                 onClick={() => {
-                                    if (formData.hall === 'Основной зал') {
+                                    if (formData.room_type === 'hall') {
                                         setCurrentModal('zal');
                                         setIsModalOpen(true);
-                                    } else if (formData.hall === 'Веранда') {
+                                    } else if (formData.room_type === 'veranda') {
                                         setCurrentModal('veranda');
                                         setIsModalOpen(true);
                                     }
                                 }}
                                 onBlur={handleBlur}
-                                className={getFieldClass('table')}
+                                className={getFieldClass('table_number')}
                                 required
                             />
-                            {touched.table && errors.table && (
-                                <span className={styles.errorMessage}>{errors.table}</span>
+                            {touched.table_number && errors.table_number && (
+                                <span className={styles.errorMessage}>{errors.table_number}</span>
                             )}
                         </div>
                     )}
@@ -299,15 +349,12 @@ const ReserveTable = ({ tableRef }) => {
                                 type="date"
                                 id="date"
                                 name="date"
-                                value={formData.date}
+                                value={dateValue}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
-                                className={getFieldClass('date')}
+                                className={getFieldClass('date_time')}
                                 required
                             />
-                            {touched.date && errors.date && (
-                                <span className={styles.errorMessage}>{errors.date}</span>
-                            )}
                         </div>
                         <div className={`${styles.formGroup} ${styles.half}`}>
                             <label htmlFor="time" className={styles.label}>Время: *</label>
@@ -315,18 +362,18 @@ const ReserveTable = ({ tableRef }) => {
                                 type="time"
                                 id="time"
                                 name="time"
-                                value={formData.time}
+                                value={timeValue}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
-                                className={getFieldClass('time')}
+                                className={getFieldClass('date_time')}
                                 required
                                 min="11:00"
                                 max="22:00"
                             />
-                            {touched.time && errors.time && (
-                                <span className={styles.errorMessage}>{errors.time}</span>
-                            )}
                         </div>
+                        {touched.date_time && errors.date_time && (
+                            <span className={styles.errorMessage}>{errors.date_time}</span>
+                        )}
                     </div>
 
                     <div className={styles.formGroup}>
@@ -374,7 +421,6 @@ const ReserveTable = ({ tableRef }) => {
                             onChange={handleChange}
                             onBlur={(e) => {
                                 handleBlur(e);
-                                // Дополнительная валидация при потере фокуса
                                 if (formData.phone.length < 12) {
                                     setErrors(prev => ({
                                         ...prev,
@@ -392,35 +438,44 @@ const ReserveTable = ({ tableRef }) => {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label htmlFor="guests" className={styles.label}>Число гостей (1-30): *</label>
+                        <label htmlFor="num_people" className={styles.label}>Число гостей (1-30): *</label>
                         <input
                             type="number"
-                            id="guests"
-                            name="guests"
+                            id="num_people"
+                            name="num_people"
                             min="1"
                             max="30"
-                            value={formData.guests}
+                            value={formData.num_people}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            className={getFieldClass('guests')}
+                            className={getFieldClass('num_people')}
                             required
                         />
-                        {touched.guests && errors.guests && (
-                            <span className={styles.errorMessage}>{errors.guests}</span>
+                        {touched.num_people && errors.num_people && (
+                            <span className={styles.errorMessage}>{errors.num_people}</span>
                         )}
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label htmlFor="comments" className={styles.label}>Комментарии:</label>
+                        <label htmlFor="comment" className={styles.label}>Комментарии:</label>
                         <textarea
-                            id="comments"
-                            name="comments"
-                            value={formData.comments}
+                            id="comment"
+                            name="comment"
+                            value={formData.comment}
                             onChange={handleChange}
                             className={styles.textarea}
                             rows={3}
                         />
                     </div>
+
+                    {authMessage && (
+                        <div className={styles.authMessage}>
+                            {authMessage}
+                            <Link to="/login" className={styles.authLink}>Войти</Link>
+                            <span> или </span>
+                            <Link to="/register" className={styles.authLink}>Зарегистрироваться</Link>
+                        </div>
+                    )}
 
                     <button
                         type="submit"

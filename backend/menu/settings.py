@@ -175,11 +175,19 @@ DJOSER = {
 
 PHONENUMBER_DEFAULT_REGION = 'RU'
 
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'server61.hosting.reg.ru'
+# EMAIL_PORT = 465
+# EMAIL_HOST_USER = 'zakaz@dali-khinkali.ru'
+# EMAIL_HOST_PASSWORD = '1234567Asd!'
+# EMAIL_USE_SSL = True
+# DEFAULT_FROM_EMAIL = 'zakaz@dali-khinkali.ru'
+# SERVER_EMAIL = 'zakaz@dali-khinkali.ru'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'server61.hosting.reg.ru'
+EMAIL_HOST = 'smtp.beget.com'
 EMAIL_PORT = 465
-EMAIL_HOST_USER = 'zakaz@dali-khinkali.ru'
-EMAIL_HOST_PASSWORD = '1234567Asd!'
+EMAIL_HOST_USER = 'ibra001@ibrokhim.ru'
+EMAIL_HOST_PASSWORD = 'Restart%1996'
 EMAIL_USE_SSL = True
-DEFAULT_FROM_EMAIL = 'zakaz@dali-khinkali.ru'
-SERVER_EMAIL = 'zakaz@dali-khinkali.ru'
+DEFAULT_FROM_EMAIL = 'ibra001@ibrokhim.ru'
+SERVER_EMAIL = 'ibra001@ibrokhim.ru'

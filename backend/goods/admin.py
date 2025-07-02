@@ -59,6 +59,7 @@ class ReservationAdmin(admin.ModelAdmin):
         'user',
         'date_time',
         'room_type',
+        'email',
         'table_number',
         'num_people',
         'phone',

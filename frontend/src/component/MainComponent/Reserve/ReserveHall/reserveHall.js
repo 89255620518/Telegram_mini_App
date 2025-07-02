@@ -2,6 +2,9 @@ import styles from './reserveHall.module.scss';
 import { useState, useEffect, useCallback } from 'react';
 import fotoHall from '../img/menu__hull.png';
 import ReserveModal from '../ReserveModal/reserveModal';
+import { api } from '../../../../api/api';
+import { useAuth } from '../../../AuthComponent/AuthContext';
+import { Link } from 'react-router-dom';
 
 const ReserveHall = ({ hallRef }) => {
     const [formData, setFormData] = useState({
@@ -37,6 +40,8 @@ const ReserveHall = ({ hallRef }) => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const { token } = useAuth();
+    const [authMessage, setAuthMessage] = useState('');
 
     const handlePhoneChange = useCallback((value) => {
         let cleaned = value.replace(/[^\d+]/g, '');
@@ -161,13 +166,23 @@ const ReserveHall = ({ hallRef }) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Проверка всех полей перед отправкой
+        //Проверка авторизации
+        if (!token) {
+            setAuthMessage('Для бронирования стола необходимо авторизоваться');
+            setIsSubmitting(false);
+            return;
+        } else {
+            setAuthMessage(''); // Сбрасываем сообщение если пользователь авторизован
+        }
+
+        // Проверка всех полей
         const newTouched = {};
         Object.keys(touched).forEach(key => {
             newTouched[key] = true;
         });
         setTouched(newTouched);
 
+        // Проверка ошибок
         const hasErrors = Object.values(errors).some(error => error !== '');
         if (hasErrors) {
             setIsSubmitting(false);
@@ -175,19 +190,33 @@ const ReserveHall = ({ hallRef }) => {
         }
 
         try {
-            // Здесь должна быть логика отправки данных на сервер
-            console.log('Форма отправлена:', formData);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            let date_time = `${formData.date} ${formData.time}`
+            const reservationData = {
+                hall: formData.hall,
+                date_time: date_time,
+                count_people: formData.guests,
+                first_name: formData.name,
+                email_user: formData.email.trim(),
+                phone: formData.phone,
+                additional_services: formData.comments || ''
+            };
+
+            await api.users.sendBanquet(reservationData, token);
 
             setIsSuccess(true);
             resetForm();
 
-            // Автоматическое закрытие уведомления через 3 секунды
             setTimeout(() => {
                 setIsSuccess(false);
             }, 3000);
         } catch (error) {
-            console.error('Ошибка при отправке формы:', error);
+            console.error('Ошибка при бронировании:', error);
+            if (error.response) {
+                console.error('Детали ошибки:', error.response.data);
+                alert(`Ошибка бронирования: ${error.response.data.message || error.response.data.error || 'Неизвестная ошибка'}`);
+            } else {
+                alert('Произошла ошибка при бронировании. Пожалуйста, попробуйте позже.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -351,6 +380,15 @@ const ReserveHall = ({ hallRef }) => {
                             rows={3}
                         />
                     </div>
+
+                    {authMessage && (
+                        <div className={styles.authMessage}>
+                            {authMessage}
+                            <Link to="/login" className={styles.authLink}>Войти</Link>
+                            <span> или </span>
+                            <Link to="/register" className={styles.authLink}>Зарегистрироваться</Link>
+                        </div>
+                    )}
 
                     <button
                         type="submit"

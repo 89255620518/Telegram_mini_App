@@ -40,8 +40,13 @@ export class GoodsAPI {
     return this.api.get(`/reservations/${id}/`);
   }
 
-  createReservation(data) {
-    return this.api.post('/reservations/', data);
+  createReservation(data, token) {
+    return this.api.post('/reservations/', data, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      },
+    });
   }
 
   updateReservation(id, data) {

@@ -4,7 +4,7 @@ import fotoGif from '../img/font.gif';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { api } from '../../../api/api';
-import { useAuth } from '../AuthContext'; // Импортируем контекст
+import { useAuth } from '../../../useContext/AuthContext'; // Импортируем контекст
 
 const LoginComponent = () => {
     const navigate = useNavigate();

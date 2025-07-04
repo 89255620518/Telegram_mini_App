@@ -2,7 +2,9 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import styles from './header.module.scss';
 import logo from '../../image/logo.1.png';
 import { useState, useEffect } from 'react';
-import { useAuth } from '../AuthComponent/AuthContext';
+import { useAuth } from '../../useContext/AuthContext';
+import { useBasket } from '../../useContext/basketContext';
+import basketFoto from '../../image/Vector.svg';
 
 const Header = ({
     modalOpen,
@@ -16,11 +18,11 @@ const Header = ({
     // isWebApp = false
 }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const { items: basketItems, } = useBasket()
     // eslint-disable-next-line no-unused-vars
     const navigate = useNavigate();
     const location = useLocation();
     const { token } = useAuth();
-
 
     useEffect(() => {
         const handleResize = () => {
@@ -117,7 +119,18 @@ const Header = ({
 
                 {token ? (
                     <>
-                        <Link to="/basket" onClick={modalClosed} className={styles.iconButton}>🛒</Link>
+                        <Link
+                            to="/basket"
+                            onClick={modalClosed}
+                            className={styles.cartIcon}
+                        >
+                            <img
+                                className={styles.cartSvg}
+                                alt='Корзина Дали-Хинкали'
+                                src={basketFoto}
+                            />
+                            <span className={styles.cartCount}>{basketItems.length}</span>
+                        </Link>
                         <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>🤵</Link>
                     </>
                 ) : (

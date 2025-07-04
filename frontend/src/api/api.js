@@ -3,6 +3,7 @@ import { GoodsAPI } from './goods';
 import { UsersAPI } from './users';
 import { AdminAPI } from './admin';
 
+// const BASE_URL = 'https://dali-khinkali.ru/api';
 const BASE_URL = 'http://127.0.0.1:8000/api';
 
 // Создаем экземпляр HTTP клиента

@@ -4,7 +4,7 @@ import {
     useCallback,
     useEffect,
     useMemo
-    
+
 } from 'react';
 import {
     FaTaxi,
@@ -19,8 +19,11 @@ import {
     FaCheckCircle
 
 } from 'react-icons/fa';
+import { useAuth } from '../../../../useContext/AuthContext';
+import { api } from '../../../../api/api';
 
 const TaxiModal = ({ modalClose }) => {
+    const { token } = useAuth();
     const initialFormData = useMemo(() => ({
         date: '',
         time: '',
@@ -30,7 +33,6 @@ const TaxiModal = ({ modalClose }) => {
         address: '',
         comments: ''
     }), []);
-
     const [formData, setFormData] = useState(initialFormData);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
@@ -134,7 +136,17 @@ const TaxiModal = ({ modalClose }) => {
 
         if (isValid) {
             try {
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                const dataTaxi = {
+                    date: formData.date,
+                    time: formData.time,
+                    first_name: formData.name,
+                    email_user: formData.email,
+                    phone: formData.phone,
+                    address: formData.address,
+                    comment: formData.comments || ''
+                };
+
+                await api.users.callTaxi(dataTaxi, token);
                 setIsSuccess(true); // Показываем окно успеха
                 // Автоматическое закрытие через 3 секунды
                 setTimeout(() => {

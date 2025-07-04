@@ -1,18 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import MenuCard from './menuCard';
 import styles from './menu.module.scss';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-
-const menuItems = [
-    { id: 1, title: 'Новый бургер', description: 'Сочная говядина с сыром', weight: 150, price: 350, image: '/burger.jpg', category: 'Бургеры' },
-    { id: 2, title: 'Салат Цезарь', description: 'С курицей и пармезаном', weight: 150, price: 280, image: '/salad.jpg', category: 'Салаты' },
-    { id: 3, title: 'Пицца Пепперони', description: 'Острая и ароматная', weight: 150, price: 450, image: '/pizza.jpg', category: 'Пицца' },
-    { id: 4, title: 'Десерт Тирамису', description: 'Нежный итальянский десерт', weight: 150, price: 220, image: '/tiramisu.jpg', category: 'Десерты' },
-    { id: 5, title: 'Лазанья', description: 'С мясной начинкой', weight: 150, price: 320, image: '/lasagna.jpg', category: 'Основные блюда' },
-    { id: 6, title: 'Стейк', description: 'Из мраморной говядины', weight: 150, price: 590, image: '/steak.jpg', category: 'Основные блюда' },
-    { id: 7, title: 'Мороженое', description: 'Ванильное с шоколадной крошкой', weight: 150, price: 320, image: '/icecream.jpg', category: 'Десерты' },
-    { id: 8, title: 'Кола', description: 'Освежающий напиток', weight: 150, price: 590, image: '/cola.jpg', category: 'Напитки' }
-];
+import { api } from '../../api/api';
 
 const MenuComponent = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -21,80 +11,108 @@ const MenuComponent = () => {
     const [touchEnd, setTouchEnd] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [activeCategory, setActiveCategory] = useState('Все');
+    const [menuItems, setMenuItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const carouselRef = useRef(null);
     const animationRef = useRef(null);
 
-    // Получаем уникальные категории
-    const categories = ['Все', ...new Set(menuItems.map(item => item.category))];
-
-    // Фильтруем товары по выбранной категории
-    const filteredItems = activeCategory === 'Все'
-        ? menuItems
-        : menuItems.filter(item => item.category === activeCategory);
-
-    useEffect(() => {
-        const updateCardsPerView = () => {
-            if (window.innerWidth < 768) {
-                setCardsPerView(1);
-            } else if (window.innerWidth < 1024) {
-                setCardsPerView(2);
-            } else {
-                setCardsPerView(3);
-            }
-        };
-
-        updateCardsPerView();
-        window.addEventListener('resize', updateCardsPerView);
-        return () => window.removeEventListener('resize', updateCardsPerView);
+    // Оптимизированная загрузка данных
+    const fetchMenuItems = useCallback(async () => {
+        try {
+            setLoading(true);
+            const response = await api.goods.getAll();
+            setMenuItems(response?.results || []);
+            setError(null);
+        } catch (err) {
+            console.error('Ошибка при загрузке меню:', err);
+            setError('Не удалось загрузить меню. Пожалуйста, попробуйте позже.');
+            setMenuItems([]);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
     useEffect(() => {
-        // Сбрасываем индекс при смене категории
+        fetchMenuItems();
+    }, [fetchMenuItems]);
+
+    // Мемоизированные категории
+    const categories = useMemo(() => {
+        const allCategories = new Set(menuItems.map(item => item.type).filter(Boolean));
+        return ['Все', ...Array.from(allCategories)];
+    }, [menuItems]);
+
+    // Оптимизированный фильтр товаров
+    const filteredItems = useMemo(() => {
+        return activeCategory === 'Все'
+            ? menuItems
+            : menuItems.filter(item => item.type === activeCategory);
+    }, [activeCategory, menuItems]);
+
+    // Адаптивный расчет количества карточек
+    const updateCardsPerView = useCallback(() => {
+        const width = window.innerWidth;
+        setCardsPerView(width < 768 ? 1 : width < 1024 ? 2 : 3);
+    }, []);
+
+    useEffect(() => {
+        updateCardsPerView();
+        window.addEventListener('resize', updateCardsPerView);
+        return () => window.removeEventListener('resize', updateCardsPerView);
+    }, [updateCardsPerView]);
+
+    // Сброс индекса при смене категории
+    useEffect(() => {
         setCurrentIndex(0);
     }, [activeCategory]);
 
-    const nextSlide = () => {
+    // Навигация карусели
+    const nextSlide = useCallback(() => {
         if (currentIndex >= filteredItems.length - cardsPerView) return;
         cancelAnimationFrame(animationRef.current);
         setCurrentIndex(prev => prev + 1);
-    };
+    }, [currentIndex, filteredItems.length, cardsPerView]);
 
-    const prevSlide = () => {
+    const prevSlide = useCallback(() => {
         if (currentIndex <= 0) return;
         cancelAnimationFrame(animationRef.current);
         setCurrentIndex(prev => prev - 1);
-    };
+    }, [currentIndex]);
 
-    const handleTouchStart = (e) => {
+    // Оптимизированные обработчики касаний
+    const handleTouchStart = useCallback((e) => {
         if (window.innerWidth >= 768) return;
-        setTouchStart(e.targetTouches[0].clientX);
-        setTouchEnd(e.targetTouches[0].clientX);
+        const x = e.targetTouches[0].clientX;
+        setTouchStart(x);
+        setTouchEnd(x);
         setIsDragging(true);
         cancelAnimationFrame(animationRef.current);
-    };
+    }, []);
 
-    const handleTouchMove = (e) => {
+    const handleTouchMove = useCallback((e) => {
         if (!isDragging || window.innerWidth >= 768) return;
         setTouchEnd(e.targetTouches[0].clientX);
-    };
+    }, [isDragging]);
 
-    const handleTouchEnd = () => {
-        if (window.innerWidth >= 768) return;
+    const handleTouchEnd = useCallback(() => {
+        if (window.innerWidth >= 768 || !isDragging) return;
         setIsDragging(false);
 
         const swipeDistance = touchEnd - touchStart;
         const threshold = 50;
 
-        if (swipeDistance < -threshold && currentIndex < filteredItems.length - cardsPerView) {
+        if (swipeDistance < -threshold) {
             nextSlide();
-        } else if (swipeDistance > threshold && currentIndex > 0) {
+        } else if (swipeDistance > threshold) {
             prevSlide();
         } else {
             animateReset();
         }
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isDragging, touchEnd, touchStart, nextSlide, prevSlide]);
 
-    const animateReset = () => {
+    const animateReset = useCallback(() => {
         let start = null;
         const duration = 300;
         const startX = touchEnd - touchStart;
@@ -103,7 +121,7 @@ const MenuComponent = () => {
             if (!start) start = timestamp;
             const progress = timestamp - start;
             const percentage = Math.min(progress / duration, 1);
-            const easePercentage = easeOutCubic(percentage);
+            const easePercentage = 1 - Math.pow(1 - percentage, 6);
             const currentX = startX * (1 - easePercentage);
 
             setTouchEnd(touchStart + currentX);
@@ -116,26 +134,24 @@ const MenuComponent = () => {
         };
 
         animationRef.current = requestAnimationFrame(step);
-    };
+    }, [touchEnd, touchStart]);
 
-    const easeOutCubic = (t) => {
-        return 1 - Math.pow(1 - t, 6);
-    };
+    const getOffset = useCallback(() => {
+        return (window.innerWidth < 768 && isDragging) ? touchEnd - touchStart : 0;
+    }, [isDragging, touchEnd, touchStart]);
 
-    const getOffset = () => {
-        if (window.innerWidth >= 768) return 0;
-        if (!isDragging) return 0;
-        return touchEnd - touchStart;
-    };
+    // Предварительный расчет состояний навигации
+    const [canGoNext, canGoPrev] = useMemo(() => [
+        currentIndex < filteredItems.length - cardsPerView,
+        currentIndex > 0
+    ], [currentIndex, filteredItems.length, cardsPerView]);
 
-    const canGoNext = currentIndex < filteredItems.length - cardsPerView;
-    const canGoPrev = currentIndex > 0;
+    if (loading) return <div className={styles.loading}>Загрузка меню...</div>;
+    if (error) return <div className={styles.error}>{error}</div>;
+    if (!menuItems.length) return <EmptyMenu />;
 
     return (
         <div className={styles.containerSubMenu}>
-            {/* <h1 className={styles.containerSubMenu__h1}>Меню</h1> */}
-
-            {/* Добавляем переключатель категорий */}
             <div className={styles.categories}>
                 {categories.map(category => (
                     <button
@@ -146,15 +162,13 @@ const MenuComponent = () => {
                         {category}
                     </button>
                 ))}
-
                 <div className={styles.containerSubMenu__line}></div>
             </div>
 
             <h2 className={styles.containerSubMenu__h1}>{activeCategory}</h2>
 
-
             <div className={styles.carouselContainer}>
-                {canGoPrev && (
+                {filteredItems.length > cardsPerView && canGoPrev && (
                     <button
                         className={`${styles.carouselButton} ${styles.carouselButtonPrev}`}
                         onClick={prevSlide}
@@ -174,11 +188,11 @@ const MenuComponent = () => {
                     <div
                         className={styles.carouselTrack}
                         style={{
-                            transform: `translateX(calc(-${currentIndex * (100 / cardsPerView)}% + ${getOffset()}px))`,
+                            transform: `translateX(calc(-${currentIndex * (100 / cardsPerView)}% + ${getOffset()}px)`,
                             transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
                         }}
                     >
-                        {filteredItems.map((item, index) => (
+                        {filteredItems.map((item) => (
                             <div
                                 key={item.id}
                                 className={styles.carouselItem}
@@ -193,7 +207,7 @@ const MenuComponent = () => {
                     </div>
                 </div>
 
-                {canGoNext && (
+                {filteredItems.length > cardsPerView && canGoNext && (
                     <button
                         className={`${styles.carouselButton} ${styles.carouselButtonNext}`}
                         onClick={nextSlide}
@@ -204,19 +218,33 @@ const MenuComponent = () => {
                 )}
             </div>
 
-            <div className={styles.pagination}>
-                {Array.from({ length: Math.ceil(filteredItems.length / cardsPerView) }).map((_, index) => (
-                    <button
-                        key={index}
-                        className={`${styles.paginationDot} ${index === Math.floor(currentIndex / cardsPerView) ? styles.active : ''
-                            }`}
-                        onClick={() => setCurrentIndex(index * cardsPerView)}
-                        aria-label={`Перейти к слайду ${index + 1}`}
-                    />
-                ))}
-            </div>
+            {filteredItems.length > cardsPerView && (
+                <div className={styles.pagination}>
+                    {Array.from({ length: Math.ceil(filteredItems.length / cardsPerView) }).map((_, index) => (
+                        <button
+                            key={index}
+                            className={`${styles.paginationDot} ${index === Math.floor(currentIndex / cardsPerView) ? styles.active : ''}`}
+                            onClick={() => setCurrentIndex(index * cardsPerView)}
+                            aria-label={`Перейти к слайду ${index + 1}`}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
+
+const EmptyMenu = () => (
+    <div className={styles.emptyContainer}>
+        <h2 className={styles.emptyTitle}>Меню пустое</h2>
+        <p className={styles.emptyMessage}>Пока нет доступных товаров. Пожалуйста, проверьте позже.</p>
+        <button
+            className={styles.emptyButton}
+            onClick={() => window.location.reload()}
+        >
+            Обновить страницу
+        </button>
+    </div>
+);
 
 export default MenuComponent;

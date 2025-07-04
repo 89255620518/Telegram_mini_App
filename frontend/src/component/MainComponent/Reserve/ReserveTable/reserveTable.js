@@ -4,7 +4,7 @@ import Zal from './Zal/zal';
 import Veranda from './Veranda/veranda';
 import ReserveModal from '../ReserveModal/reserveModal';
 import { api } from '../../../../api/api';
-import { useAuth } from '../../../AuthComponent/AuthContext';
+import { useAuth } from '../../../../useContext/AuthContext';
 import { Link } from 'react-router-dom';
 
 const ReserveTable = ({ tableRef }) => {

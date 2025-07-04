@@ -76,6 +76,14 @@ class HttpClient {
     });
   }
 
+  patch(url, data) {
+    return this._handleRequest(url, {
+      method: 'PATCH',
+      headers: this._getHeaders(),
+      body: JSON.stringify(data)
+    });
+  }
+
   delete(url) {
     return this._handleRequest(url, {
       method: 'DELETE',

@@ -27,7 +27,7 @@ class TokenCreateByPhoneView(APIView):
         if phone is None or password is None:
             return Response(
                 {'message': _('Телефон и пароль являются '
-                              'обязательными полями')},
+                                'обязательными полями')},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -201,19 +201,59 @@ def send_taxi(request):
     date = request.data.get('date', '')
     time = request.data.get('time', '')
     first_name = request.data.get('first_name', '')
+    email_user = request.data.get('email_user', '')
     phone = request.data.get('phone', '')
     address = request.data.get('address', '')
-    message = (f"БРОНИРОВАНИЕ ТАКСИ ОТ {first_name}\n\n"
-               f"НОМЕР ТЕЛЕФОНА: {phone}\nДАТА И ВРЕМЯ БРОНИРОВАНИЯ: "
-               f"{date} {time}\nАДРЕС: {address}")
+    comment = request.data.get('comment', '')
+
+    # Сообщение для администратора (подробное)
+    message_admin = (
+        f"🚖 НОВОЕ БРОНИРОВАНИЕ ТАКСИ 🚖\n\n"
+        f"👤 Клиент: {first_name}\n"
+        f"📞 Телефон: {phone}\n"
+        f"📧 Email: {email_user}\n"
+        f"📅 Дата: {date}\n"
+        f"⏰ Время: {time}\n"
+        f"📍 Адрес подачи: {address}\n"
+        f"💬 Комментарий: {comment if comment else 'нет комментариев'}\n\n"
+        f"ℹ️ Пожалуйста, подтвердите бронирование клиенту как можно скорее."
+    )
+
+    # Красивое сообщение для пользователя
+    message_user = (
+        f"Уважаемый(ая) {first_name},\n\n"
+        f"Ваше бронирование такси успешно принято! 🎉\n\n"
+        f"🔹 Детали брони:\n"
+        f"   📅 Дата: {date}\n"
+        f"   ⏰ Время: {time}\n"
+        f"   📍 Адрес подачи: {address}\n\n"
+        f"Мы свяжемся с вами в ближайшее время для подтверждения.\n\n"
+        f"С уважением, Дали-Хинкали"
+    )
+
+    # Отправка письма администратору
     send_mail(
-        f"БРОНИРОВАНИЕ ТАКСИ ОТ {first_name}",
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [settings.DEFAULT_FROM_EMAIL],
+        subject=f"🚖 Новое бронирование такси от {first_name}",
+        message=message_admin,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[settings.DEFAULT_FROM_EMAIL],
         fail_silently=False,
     )
-    return Response({'success': 'Сообщение успешно отправлено'})
+
+    # Отправка письма пользователю
+    if email_user:
+        send_mail(
+            subject=f"Подтверждение бронирования такси на {date}",
+            message=message_user,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email_user],
+            fail_silently=False,
+        )
+
+    return Response(
+        {'success': 'Сообщения успешно отправлены'},
+        status=status.HTTP_200_OK
+    )
 
 
 @api_view(['POST'])
@@ -292,10 +332,10 @@ def send_hookah(request):
     count_people = request.data.get('count_people', '')
     comment = request.data.get('comment', '')
     message = (f"БРОНИРОВАНИЕ СТОЛА В КАЛЬЯННОЙ ОТ {first_name}\n\n"
-               f"НОМЕР ТЕЛЕФОНА: {phone}\nЗАЛ: {hall}\n"
-               f"КОЛИЧЕСТВО ГОСТЕЙ: {count_people}\n"
-               f"ДАТА И ВРЕМЯ БРОНИРОВАНИЯ: {date} {time}\n\n"
-               f"КОММЕНТАРИЙ: {comment}")
+                f"НОМЕР ТЕЛЕФОНА: {phone}\nЗАЛ: {hall}\n"
+                f"КОЛИЧЕСТВО ГОСТЕЙ: {count_people}\n"
+                f"ДАТА И ВРЕМЯ БРОНИРОВАНИЯ: {date} {time}\n\n"
+                f"КОММЕНТАРИЙ: {comment}")
     send_mail(
         f"БРОНИРОВАНИЕ СТОЛА В КАЛЬЯННОЙ ОТ {first_name}",
         message,

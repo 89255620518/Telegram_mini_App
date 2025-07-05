@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { api } from '../api/api';
 import { useAuth } from './AuthContext';
 
@@ -9,9 +9,8 @@ export const BasketProvider = ({ children }) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [lastUpdated, setLastUpdated] = useState(null);
 
-    // Загрузка корзины
+    // Загрузка корзины (стабильная ссылка при неизменном token)
     const loadBasket = useCallback(async () => {
         if (!token) {
             setItems([]);
@@ -24,7 +23,6 @@ export const BasketProvider = ({ children }) => {
             setError(null);
             const response = await api.goods.getCart(token);
 
-            // Преобразуем данные API в формат, ожидаемый фронтендом
             const formattedItems = response.map(item => ({
                 id: item.goods.id,
                 goods: {
@@ -32,14 +30,12 @@ export const BasketProvider = ({ children }) => {
                     title: item.goods.title,
                     price: item.goods.price,
                     images: item.goods.images,
-                    // Другие необходимые поля товара
                 },
                 quantity: item.count,
                 price: item.price
             }));
 
             setItems(formattedItems);
-            setLastUpdated(new Date());
         } catch (err) {
             console.error('Ошибка загрузки корзины:', err);
             setError('Не удалось загрузить корзину');
@@ -49,138 +45,94 @@ export const BasketProvider = ({ children }) => {
         }
     }, [token]);
 
-    // Автоматическая загрузка корзины при изменении токена или после обновления
+    // Загружаем корзину только при изменении токена
     useEffect(() => {
         loadBasket();
     }, [loadBasket]);
 
-    // Добавление товара в корзину
-    const addItem = useCallback(async (itemId, count) => {
-        if (!token) {
-            throw new Error('Для добавления в корзину требуется авторизация');
-        }
-
+    // Добавление товара (стабильная ссылка)
+    const addItem = useCallback(async (itemId, count = 1) => {
+        if (!token) throw new Error('Требуется авторизация');
         try {
             await api.goods.addToCart(itemId, token, count);
             await loadBasket();
         } catch (err) {
-            console.error('Ошибка добавления в корзину:', err);
-            throw new Error(err.response?.data?.error || 'Не удалось добавить товар в корзину');
+            throw new Error(err.response?.data?.error || 'Ошибка добавления');
         }
     }, [token, loadBasket]);
 
-    // Удаление товара из корзины
+    // Удаление товара (стабильная ссылка)
     const removeItem = useCallback(async (itemId) => {
         if (!token) return;
-
         try {
             await api.goods.removeFromCart(itemId, token);
             await loadBasket();
         } catch (err) {
-            console.error('Ошибка удаления из корзины:', err);
-            throw new Error('Не удалось удалить товар из корзины');
+            throw new Error('Ошибка удаления');
         }
     }, [token, loadBasket]);
 
-    // Обновление количества товара
+    // Обновление количества (стабильная ссылка)
     const updateItem = useCallback(async (itemId, newQuantity) => {
         if (!token) return;
-        if (newQuantity < 1) {
-            await removeItem(itemId);
-            return;
-        }
-
         try {
             await api.goods.updateCartItem(itemId, newQuantity, token);
             await loadBasket();
         } catch (err) {
-            console.error('Ошибка обновления количества:', err);
-            throw new Error(err.response?.data?.error || 'Не удалось изменить количество товара');
+            throw new Error('Ошибка обновления');
         }
-    }, [token, loadBasket, removeItem]);
+    }, [token, loadBasket]);
 
-    // Очистка корзины
+    // Очистка корзины (без зависимости от items)
     const clearBasket = useCallback(async () => {
         if (!token) return;
-
         try {
-            // Удаляем каждый товар по отдельности, так как API не предоставляет массового удаления
-            await Promise.all(items.map(item =>
+            const currentItems = [...items];
+            await Promise.all(currentItems.map(item =>
                 api.goods.removeFromCart(item.id, token)
             ));
             await loadBasket();
         } catch (err) {
-            console.error('Ошибка очистки корзины:', err);
-            throw new Error('Не удалось очистить корзину');
+            throw new Error('Ошибка очистки');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token, items, loadBasket]);
 
-    // Создание заказа
-    const createOrder = useCallback(async (orderData) => {
-        if (!token) {
-            throw new Error('Для оформления заказа требуется авторизация');
-        }
-
-        try {
-            // Подготавливаем данные для API
-            const apiOrderData = {
-                ...orderData,
-                // Дополнительные преобразования данных при необходимости
-            };
-
-            const response = await api.goods.createOrder(apiOrderData, token);
-            await loadBasket(); // Обновляем корзину после создания заказа
-            return response.data;
-        } catch (err) {
-            console.error('Ошибка создания заказа:', err);
-            throw new Error(err.response?.data?.error || 'Не удалось оформить заказ');
-        }
-    }, [token, loadBasket]);
-
-    // Получение истории заказов
-    const getOrderHistory = useCallback(async () => {
-        if (!token) return [];
-
-        try {
-            const response = await api.goods.getOrderHistory(token);
-            // Преобразуем данные API в формат, ожидаемый фронтендом
-            return response.data.map(order => ({
-                id: order.id,
-                date: order.order_date,
-                total: order.total_price,
-                status: 'completed', // Добавляем статус, если API его не предоставляет
-                items: order.items.map(item => ({
-                    id: item.goods.id,
-                    title: item.goods.title,
-                    quantity: item.count,
-                    price: item.price
-                }))
-            }));
-        } catch (err) {
-            console.error('Ошибка получения истории заказов:', err);
-            throw new Error('Не удалось загрузить историю заказов');
-        }
-    }, [token]);
-
     // Вычисляемые значения
-    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const totalItems = useMemo(() =>
+        items.reduce((sum, item) => sum + item.quantity, 0),
+        [items]
+    );
 
-    const contextValue = {
+    const totalPrice = useMemo(() =>
+        items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        [items]
+    );
+
+    // Мемоизированный контекст
+    const contextValue = useMemo(() => ({
         items,
         loading,
         error,
-        lastUpdated,
         totalItems,
         totalPrice,
         addItem,
         removeItem,
         updateItem,
         clearBasket,
-        createOrder,
-        getOrderHistory,
         refreshBasket: loadBasket
-    };
+    }), [
+        items,
+        loading,
+        error,
+        totalItems,
+        totalPrice,
+        addItem,
+        removeItem,
+        updateItem,
+        clearBasket,
+        loadBasket
+    ]);
 
     return (
         <BasketContext.Provider value={contextValue}>

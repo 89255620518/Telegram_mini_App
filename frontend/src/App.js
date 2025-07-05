@@ -38,7 +38,6 @@ const routes = [
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [basketItems, setBasketItems] = useState([]);
   const tableRef = useRef(null);
   const hallRef = useRef(null);
   const taxiRef = useRef(null);

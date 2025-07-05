@@ -74,16 +74,6 @@ export class GoodsAPI {
     });
   }
 
-  // Работа с заказами
-  createOrder(orderData, token) {
-    return this.api.post(`${this.baseUrl}create_order/`, orderData, {
-      headers: {
-        'Authorization': `Token ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-  }
-
   getOrderHistory(token) {
     return this.api.get(`${this.baseUrl}order_history/`, {
       headers: {

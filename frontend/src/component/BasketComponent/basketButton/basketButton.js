@@ -4,7 +4,9 @@ import { useBasket } from '../../../useContext/basketContext';
 import { Link } from 'react-router-dom';
 
 const BasketButton = ({ elem }) => {
-    const [showAlert, setShowAlert] = useState(false);
+    const [showMiniAlert, setShowMiniAlert] = useState(false);
+    const [showAddiAlert, setShowAddiAlert] = useState(false);
+    const [showAuthiAlert, setShowAuthiAlert] = useState(false);
     const {
         items: basketItems,
         addItem,
@@ -20,18 +22,18 @@ const BasketButton = ({ elem }) => {
     const minKhinkaliCount = 5;
 
     const showMinAlert = () => {
-        setShowAlert(true);
-        setTimeout(() => setShowAlert(false), 3000);
+        setShowMiniAlert(true);
+        setTimeout(() => setShowMiniAlert(false), 3000);
     };
 
     const showAddAlert = () => {
-        setShowAlert(true);
-        setTimeout(() => setShowAlert(false), 3000);
+        setShowAddiAlert(true);
+        setTimeout(() => setShowAddiAlert(false), 3000);
     };
 
     const showAuthAlert = () => {
-        setShowAlert(true);
-        setTimeout(() => setShowAlert(false), 3000);
+        setShowAuthiAlert(true);
+        setTimeout(() => setShowAuthiAlert(false), 3000);
     };
 
 
@@ -49,7 +51,7 @@ const BasketButton = ({ elem }) => {
 
             if (isKhinkali) {
                 if (currentCount === 0) {
-                    await addItem(elem.id, minKhinkaliCount);
+                    await addItem(elem.id, currentCount + 5);
                     showAddAlert();
                 } else {
                     await updateItem(elem.id, currentCount + 1);
@@ -82,7 +84,7 @@ const BasketButton = ({ elem }) => {
 
     const handleIncreaseItem = async () => {
         try {
-            if (isKhinkali && currentCount <= minKhinkaliCount) {
+            if (isKhinkali && currentCount < minKhinkaliCount) {
                 // Если хинкали нет в корзине, добавляем сразу 5
                 await updateItem(elem.id, currentCount + 5);
                 showAddAlert();
@@ -133,7 +135,7 @@ const BasketButton = ({ elem }) => {
                 )}
             </form>
 
-            {showAlert && (
+            {showMiniAlert && (
                 <div className={styless.alertOverlay}>
                     <div className={styless.alertBox}>
                         <div className={styless.alertContent}>
@@ -144,7 +146,7 @@ const BasketButton = ({ elem }) => {
                 </div>
             )}
 
-            {showAlert && (
+            {showAddiAlert && (
                 <div className={styless.alertOverlay}>
                     <div className={styless.alertBox}>
                         <div className={styless.alertContent}>
@@ -155,17 +157,17 @@ const BasketButton = ({ elem }) => {
                 </div>
             )}
 
-            {showAlert && (
+            {showAuthiAlert && (
                 <div className={styless.alertOverlay}>
                     <div className={styless.alertBox}>
                         <div className={styless.alertContent}>
                             <span className={styless.alertIcon}>🔒</span>
                             <p>Чтобы добавить товар в корзину, пожалуйста <Link to="/login" className={styless.authLink}>войдите</Link> или <Link to="/register" className={styless.authLink}>зарегистрируйтесь</Link></p>
                             <div className={styless.alertButtons}>
-                                <Link to="/login" className={styless.alertButtonPrimary} onClick={() => setShowAlert(false)}>
+                                <Link to="/login" className={styless.alertButtonPrimary} onClick={() => setShowAuthiAlert(false)}>
                                     Войти
                                 </Link>
-                                <button className={styless.alertButtonSecondary} onClick={() => setShowAlert(false)}>
+                                <button className={styless.alertButtonSecondary} onClick={() => setShowAuthiAlert(false)}>
                                     Позже
                                 </button>
                             </div>

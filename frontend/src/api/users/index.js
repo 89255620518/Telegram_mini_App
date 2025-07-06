@@ -23,12 +23,22 @@ export class UsersAPI {
     return this.api.put('/users/me/', data);
   }
 
-  sendOrder(data) {
-    return this.api.post('/send-order/', data);
+  sendOrder(data, token) {
+    return this.api.post('/send-order/', data, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
   }
 
-  sendPreorder(data) {
-    return this.api.post('/send-preorder/', data);
+  sendPreorder(data, token) {
+    return this.api.post('/send-preorder/', data, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
   }
 
   sendBanquet(data, token) {
@@ -40,15 +50,30 @@ export class UsersAPI {
     })
   }
 
-  sendHookah(data) {
-    return this.api.post('/send-hookah/', data);
+  sendHookah(data, token) {
+    return this.api.post('/send-hookah/', data, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
   }
 
-  processPayment(data) {
-    return this.api.post('/payment/', data);
+  processPayment(data, token) {
+    return this.api.post('/payment/', data, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
   }
 
-  callTaxi(data) {
-    return this.api.post('/send-taxi/', data);
+  callTaxi(data, token) {
+    return this.api.post('/send-taxi/', data, {
+      headers: {
+        'Authorization': `Token ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
   }
 }

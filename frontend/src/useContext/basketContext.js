@@ -9,8 +9,18 @@ export const BasketProvider = ({ children }) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [orderProcessing, setOrderProcessing] = useState(false);
+    const [orderError, setOrderError] = useState(null);
+    const [paymentLink, setPaymentLink] = useState(null);
 
-    // Загрузка корзины (стабильная ссылка при неизменном token)
+    // 1. Сначала объявляем все вычисляемые значения
+    const calculateTotalItems = (items) => items.reduce((sum, item) => sum + item.quantity, 0);
+    const calculateTotalPrice = (items) => items.reduce((sum, item) => sum + (item.price), 0);
+
+    const totalItems = useMemo(() => calculateTotalItems(items), [items]);
+    const totalPrice = useMemo(() => calculateTotalPrice(items), [items]);
+
+    // 2. Затем объявляем основные функции работы с корзиной
     const loadBasket = useCallback(async () => {
         if (!token) {
             setItems([]);
@@ -45,23 +55,31 @@ export const BasketProvider = ({ children }) => {
         }
     }, [token]);
 
-    // Загружаем корзину только при изменении токена
     useEffect(() => {
         loadBasket();
     }, [loadBasket]);
 
-    // Добавление товара (стабильная ссылка)
-    const addItem = useCallback(async (itemId, count = 1) => {
-        if (!token) throw new Error('Требуется авторизация');
+    // 3. Функции для работы с товарами
+    const khinkaliIds = useMemo(() => [82, 174, 81, 83], []);
+    const minKhinkaliCount = 5;
+
+    const isKhinkali = useCallback(
+        (itemId, itemTitle) => khinkaliIds.includes(itemId) || (itemTitle?.startsWith("Хинкали")),
+        [khinkaliIds]
+    );
+
+    const addItem = useCallback(async (itemId, count = 1, itemTitle = "") => {
+        if (!token) throw new Error("Требуется авторизация");
+        const finalCount = isKhinkali(itemId, itemTitle) ? Math.max(count, minKhinkaliCount) : count;
+
         try {
-            await api.goods.addToCart(itemId, token, count);
+            await api.goods.addToCart(itemId, token, finalCount);
             await loadBasket();
         } catch (err) {
-            throw new Error(err.response?.data?.error || 'Ошибка добавления');
+            throw new Error(err.response?.data?.error || "Ошибка добавления");
         }
-    }, [token, loadBasket]);
+    }, [token, loadBasket, isKhinkali]);
 
-    // Удаление товара (стабильная ссылка)
     const removeItem = useCallback(async (itemId) => {
         if (!token) return;
         try {
@@ -72,7 +90,6 @@ export const BasketProvider = ({ children }) => {
         }
     }, [token, loadBasket]);
 
-    // Обновление количества (стабильная ссылка)
     const updateItem = useCallback(async (itemId, newQuantity) => {
         if (!token) return;
         try {
@@ -83,33 +100,110 @@ export const BasketProvider = ({ children }) => {
         }
     }, [token, loadBasket]);
 
-    // Очистка корзины (без зависимости от items)
     const clearBasket = useCallback(async () => {
         if (!token) return;
         try {
-            const currentItems = [...items];
-            await Promise.all(currentItems.map(item =>
-                api.goods.removeFromCart(item.id, token)
-            ));
+            await Promise.all(items.map(item => api.goods.removeFromCart(item.id, token)));
             await loadBasket();
         } catch (err) {
             throw new Error('Ошибка очистки');
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token, items, loadBasket]);
 
-    // Вычисляемые значения
-    const totalItems = useMemo(() =>
-        items.reduce((sum, item) => sum + item.quantity, 0),
-        [items]
-    );
+    // 4. Функции оформления заказа
+    // const checkout = useCallback(async (orderData) => {
+    //     if (!token) throw new Error("Требуется авторизация");
+    //     if (!items.length) throw new Error("Корзина пуста");
 
-    const totalPrice = useMemo(() =>
-        items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-        [items]
-    );
+    //     setOrderProcessing(true);
+    //     setOrderError(null);
 
-    // Мемоизированный контекст
+    //     try {
+    //         const currentTotalPrice = calculateTotalPrice(items);
+
+    //         // Отправка заказа
+    //         await api.users.sendOrder({
+    //             address: orderData.address,
+    //             delivery_time: orderData.delivery_time,
+    //             comments: orderData.comments || '',
+    //             description: orderData.description || 'Заказ из корзины',
+    //             goods_id: items.map(item => item.id),
+    //             count_goods: items.map(item => item.quantity),
+    //             price_goods: items.map(item => item.price),
+    //             final_price: currentTotalPrice
+    //         }, token);
+
+    //         // Создание платежа
+    //         const paymentResponse = await api.users.processPayment({
+    //             price: currentTotalPrice,
+    //             num_order: `order_${Date.now()}`,
+    //             service_name: 'Оплата заказа'
+    //         }, token);
+
+    //         setPaymentLink(paymentResponse.data.success);
+    //         await clearBasket();
+    //         return true;
+    //     } catch (error) {
+    //         console.error('Ошибка оформления заказа:', error);
+    //         setOrderError(error.response?.data?.error || 'Ошибка оформления заказа');
+    //         throw error;
+    //     } finally {
+    //         setOrderProcessing(false);
+    //     }
+    // }, [token, items, clearBasket]);
+    const checkout = useCallback(async (orderData) => {
+        if (!token) throw new Error("Требуется авторизация");
+        if (!items.length) throw new Error("Корзина пуста");
+
+        setOrderProcessing(true);
+        setOrderError(null);
+
+        try {
+            const currentTotalPrice = calculateTotalPrice(items);
+
+            // Отправка заказа
+            await api.users.sendOrder({
+                address: orderData.address,
+                delivery_time: orderData.delivery_time,
+                comments: orderData.comments || '',
+                description: orderData.description || 'Заказ из корзины',
+                goods_id: items.map(item => item.id),
+                count_goods: items.map(item => item.quantity),
+                price_goods: items.map(item => item.price * item.quantity),
+                final_price: currentTotalPrice
+            }, token);
+
+            // Создание платежа
+            const paymentResponse = await api.users.processPayment({
+                price: currentTotalPrice,
+                num_order: `order_${Date.now()}`,
+                service_name: 'Оплата заказа'
+            }, token);
+
+            // Обновляем paymentLink в состоянии
+            if (paymentResponse && paymentResponse.success) {
+                setPaymentLink(paymentResponse.success);
+                await clearBasket();
+                return paymentResponse.success; // Возвращаем ссылку
+            }
+
+            console.log(paymentLink, 'pau')
+        } catch (error) {
+            console.error('Ошибка оформления заказа:', error);
+            setOrderError(error.response?.data?.error || 'Ошибка оформления заказа');
+            throw error;
+        } finally {
+            setOrderProcessing(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token, items, clearBasket]);
+
+    const clearPayment = useCallback(() => {
+        setPaymentLink(null);
+        setOrderError(null);
+    }, []);
+
+    // 5. Формируем контекстное значение
     const contextValue = useMemo(() => ({
         items,
         loading,
@@ -120,7 +214,12 @@ export const BasketProvider = ({ children }) => {
         removeItem,
         updateItem,
         clearBasket,
-        refreshBasket: loadBasket
+        refreshBasket: loadBasket,
+        checkout,
+        orderProcessing,
+        orderError,
+        paymentLink,
+        clearPayment
     }), [
         items,
         loading,
@@ -131,7 +230,12 @@ export const BasketProvider = ({ children }) => {
         removeItem,
         updateItem,
         clearBasket,
-        loadBasket
+        loadBasket,
+        checkout,
+        orderProcessing,
+        orderError,
+        paymentLink,
+        clearPayment
     ]);
 
     return (

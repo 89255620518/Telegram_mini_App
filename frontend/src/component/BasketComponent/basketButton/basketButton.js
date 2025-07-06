@@ -1,25 +1,29 @@
-import styless from './basketButton.module.css';
 import { useState } from "react";
 import { useBasket } from '../../../useContext/basketContext';
 import { Link } from 'react-router-dom';
+import styless from './basketButton.module.css';
 
-const BasketButton = ({ elem }) => {
+const BasketButton = ({ elem, currentCount: propCurrentCount, className }) => {
     const [showMiniAlert, setShowMiniAlert] = useState(false);
     const [showAddiAlert, setShowAddiAlert] = useState(false);
     const [showAuthiAlert, setShowAuthiAlert] = useState(false);
     const {
-        items: basketItems,
+        items: basketItems = [],
         addItem,
         removeItem,
-        updateItem
+        updateItem,
+        isKhinkali,
+        minKhinkaliCount = 5
     } = useBasket();
 
-    const currentItem = basketItems.find(item => item.id === elem.id);
-    const currentCount = currentItem ? currentItem.quantity : 0;
+    // Защита от undefined
+    if (!elem || !elem.id) {
+        console.error('Invalid elem prop in BasketButton:', elem);
+        return null;
+    }
 
-    const isKhinkali = [82, 174, 81, 83].includes(elem.id) ||
-        (elem.title && elem.title.startsWith("Хинкали"));
-    const minKhinkaliCount = 5;
+    const currentItem = basketItems.find(item => item?.id === elem?.id);
+    const currentCount = propCurrentCount ?? (currentItem ? currentItem.quantity : 0);
 
     const showMinAlert = () => {
         setShowMiniAlert(true);
@@ -36,22 +40,23 @@ const BasketButton = ({ elem }) => {
         setTimeout(() => setShowAuthiAlert(false), 3000);
     };
 
-
     const handleRemoveFromCart = async () => {
         try {
-            await removeItem(elem.id);
+            if (elem?.id) {
+                await removeItem(elem.id);
+            }
         } catch (err) {
-            console.log(err);
+            console.error('Error removing item:', err);
         }
     };
 
     const handleAddToCart = async () => {
-
         try {
+            if (!elem?.id) return;
 
             if (isKhinkali) {
                 if (currentCount === 0) {
-                    await addItem(elem.id, currentCount + 5);
+                    await addItem(elem.id, 5);
                     showAddAlert();
                 } else {
                     await updateItem(elem.id, currentCount + 1);
@@ -59,41 +64,47 @@ const BasketButton = ({ elem }) => {
             } else {
                 await addItem(elem.id, 1);
             }
-
         } catch (err) {
-            console.log(err);
-            if (err.message.includes('авторизация')) {
-                showAuthAlert()
+            console.error('Error adding item:', err);
+            if (err.message?.includes('авторизация')) {
+                showAuthAlert();
             }
         }
     };
 
     const handleDecreaseItem = async () => {
-        if (isKhinkali && currentCount <= minKhinkaliCount) {
-            showMinAlert();
-            await handleRemoveFromCart();
-            return;
-        }
-
         try {
-            await updateItem(elem.id, currentCount - 1);
+            if (!elem?.id) return;
+
+            if (isKhinkali && currentCount <= minKhinkaliCount) {
+                showMinAlert();
+                await handleRemoveFromCart();
+                return;
+            }
+
+            const newQuantity = currentCount - 1;
+            if (newQuantity < 1) {
+                await handleRemoveFromCart();
+                return;
+            }
+            await updateItem(elem.id, newQuantity);
         } catch (err) {
-            console.log(err);
+            console.error('Error decreasing item:', err);
         }
     };
 
     const handleIncreaseItem = async () => {
         try {
+            if (!elem?.id) return;
+
             if (isKhinkali && currentCount < minKhinkaliCount) {
-                // Если хинкали нет в корзине, добавляем сразу 5
-                await updateItem(elem.id, currentCount + 5);
+                await updateItem(elem.id, 5);
                 showAddAlert();
             } else {
-                // Увеличиваем количество на 1
                 await updateItem(elem.id, currentCount + 1);
             }
         } catch (err) {
-            console.log(err);
+            console.error('Error increasing item:', err);
         }
     };
 
@@ -102,7 +113,7 @@ const BasketButton = ({ elem }) => {
     };
 
     return (
-        <div className={styless.wrapper}>
+        <div className={`${styless.wrapper} ${className}`}>
             <form className={styless.formBtn} onSubmit={handleSubmit}>
                 {currentCount ? (
                     <div className={styless.countContainer}>
@@ -135,6 +146,7 @@ const BasketButton = ({ elem }) => {
                 )}
             </form>
 
+            {/* Alert components remain the same */}
             {showMiniAlert && (
                 <div className={styless.alertOverlay}>
                     <div className={styless.alertBox}>
@@ -176,7 +188,7 @@ const BasketButton = ({ elem }) => {
                 </div>
             )}
         </div>
-    )
-}
+    );
+};
 
 export default BasketButton;

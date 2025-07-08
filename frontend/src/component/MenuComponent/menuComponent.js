@@ -3,19 +3,31 @@ import MenuCard from './menuCard';
 import styles from './menu.module.scss';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { api } from '../../api/api';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const MenuComponent = () => {
+    const carouselRef = useRef(null);
+    const animationRef = useRef(null);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const searchParams = new URLSearchParams(location.search);
+    const urlCategory = searchParams.get('category');
+
     const [currentIndex, setCurrentIndex] = useState(0);
     const [cardsPerView, setCardsPerView] = useState(3);
     const [touchStart, setTouchStart] = useState(0);
     const [touchEnd, setTouchEnd] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
-    const [activeCategory, setActiveCategory] = useState('Все');
+    const [activeCategory, setActiveCategory] = useState(urlCategory || 'Все');
     const [menuItems, setMenuItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const carouselRef = useRef(null);
-    const animationRef = useRef(null);
+
+    useEffect(() => {
+        if (urlCategory) {
+            setActiveCategory(urlCategory);
+        }
+    }, [urlCategory]);
 
     // Оптимизированная загрузка данных
     const fetchMenuItems = useCallback(async () => {
@@ -66,6 +78,17 @@ const MenuComponent = () => {
     useEffect(() => {
         setCurrentIndex(0);
     }, [activeCategory]);
+
+    const handleCategoryChange = useCallback((category) => {
+        setActiveCategory(category);
+        // Обновляем URL при смене категории
+        if (category === 'Все') {
+            navigate('/menu');
+        } else {
+            navigate(`/menu?category=${encodeURIComponent(category)}`);
+        }
+        setCurrentIndex(0);
+    }, [navigate]);
 
     // Навигация карусели
     const nextSlide = useCallback(() => {

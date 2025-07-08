@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import styles from './menu.module.scss';
+import styles from './menuCard.module.scss';
 import { api } from '../../api/api';
 import BasketButton from '../BasketComponent/basketButton/basketButton';
 const MenuCard = ({ item }) => {

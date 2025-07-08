@@ -1,5 +1,7 @@
 import styles from './delivery.module.scss';
 import mobile from './img/delivery-mobile.png';
+import car from './img/car.210b352d35b976120e1c.png';
+import logo from './img/загруженное.png';
 
 const DeliveryComponent = ({ deliveryRef }) => {
 
@@ -15,6 +17,12 @@ const DeliveryComponent = ({ deliveryRef }) => {
                     <h3 className={styles.containerDelivery__content__infoButton_text}>Закажи и следи за курьером в режиме Онлайн</h3>
 
                     <button className={styles.containerDelivery__content__infoButton_button}>Оформить заказ ДОСТАВКУ</button>
+                </div>
+
+                <div className={styles.imageCarIcon}>
+                    <img src={car} alt='Машина Дали-Хинкали' />
+
+                    <img src={logo} alt='Логотип Дали-Хинкали' />
                 </div>
             </div>
         </div>

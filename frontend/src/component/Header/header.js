@@ -17,7 +17,7 @@ const Header = ({
     contactsRef
     // isWebApp = false
 }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1000);
     const { items: basketItems, } = useBasket()
     // eslint-disable-next-line no-unused-vars
     const navigate = useNavigate();
@@ -26,7 +26,7 @@ const Header = ({
 
     useEffect(() => {
         const handleResize = () => {
-            setIsMobile(window.innerWidth < 768);
+            setIsMobile(window.innerWidth < 1000);
         };
 
         window.addEventListener('resize', handleResize);
@@ -100,43 +100,73 @@ const Header = ({
                                 </div>
                             </div>
                         )}
+
+                        <Link to="/" className={styles.logoContainer}>
+                            <img src={logo} alt='Логотип Дали-Хинкали' className={styles.logo} />
+                        </Link>
+
+                        {token ? (
+                            <>
+                                <Link
+                                    to="/basket"
+                                    onClick={modalClosed}
+                                    className={styles.cartIcon}
+                                >
+                                    <img
+                                        className={styles.cartSvg}
+                                        alt='Корзина Дали-Хинкали'
+                                        src={basketFoto}
+                                    />
+                                    <span className={styles.cartCount}>{basketItems.length}</span>
+                                </Link>
+                                <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>🤵</Link>
+                            </>
+                        ) : (
+                            <>
+                                <Link to="/login" onClick={modalClosed} className={styles.authButton}>Войти</Link>
+                            </>
+                        )}
                     </>
+
+
                 ) : (
                     <div className={styles.desktopMenu}>
-                        <Link to={'/'} onClick={modalClosed}><span>Главная</span></Link>
-                        <Link to={'/menu'} onClick={modalClosed}><span>Меню</span></Link>
-                        <button onClick={() => handleScroll(tableRef)}><span>Резерв Стола</span></button>
-                        <button onClick={() => handleScroll(deliveryRef)}><span>Доставка</span></button>
-                        <button onClick={() => handleScroll(hallRef)}><span>Банкеты</span></button>
-                        <button onClick={() => handleScroll(taxiRef)}><span>Такси</span></button>
-                        <button onClick={() => handleScroll(contactsRef)}><span>Контакты</span></button>
-                    </div>
-                )}
-
-                <Link to="/" className={styles.logoContainer}>
-                    <img src={logo} alt='Логотип Дали-Хинкали' className={styles.logo} />
-                </Link>
-
-                {token ? (
-                    <>
-                        <Link
-                            to="/basket"
-                            onClick={modalClosed}
-                            className={styles.cartIcon}
-                        >
-                            <img
-                                className={styles.cartSvg}
-                                alt='Корзина Дали-Хинкали'
-                                src={basketFoto}
-                            />
-                            <span className={styles.cartCount}>{basketItems.length}</span>
+                        <Link to="/" className={styles.logoContainer}>
+                            <img src={logo} alt='Логотип Дали-Хинкали' className={styles.logo} />
                         </Link>
-                        <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>🤵</Link>
-                    </>
-                ) : (
-                    <>
-                        <Link to="/login" onClick={modalClosed} className={styles.authButton}>Войти</Link>
-                    </>
+
+                        <div className={styles.buttonLinks}>
+                            <Link to={'/'} onClick={modalClosed}><span>Главная</span></Link>
+                            <Link to={'/menu'} onClick={modalClosed}><span>Меню</span></Link>
+                            <button onClick={() => handleScroll(tableRef)}><span>Резерв Стола</span></button>
+                            <button onClick={() => handleScroll(deliveryRef)}><span>Доставка</span></button>
+                            <button onClick={() => handleScroll(hallRef)}><span>Банкеты</span></button>
+                            <button onClick={() => handleScroll(taxiRef)}><span>Такси</span></button>
+                            <button onClick={() => handleScroll(contactsRef)}><span>Контакты</span></button>
+                        </div>
+
+                        {token ? (
+                            <div className={styles.cartCabinet}>
+                                <Link
+                                    to="/basket"
+                                    onClick={modalClosed}
+                                    className={styles.cartIcon}
+                                >
+                                    <img
+                                        className={styles.cartSvg}
+                                        alt='Корзина Дали-Хинкали'
+                                        src={basketFoto}
+                                    />
+                                    <span className={styles.cartCount}>{basketItems.length}</span>
+                                </Link>
+                                <Link to="/cabinet" onClick={modalClosed} className={styles.iconButton}>🤵</Link>
+                            </div>
+                        ) : (
+                            <>
+                                <Link to="/login" onClick={modalClosed} className={styles.authButton}>Войти</Link>
+                            </>
+                        )}
+                    </div>
                 )}
             </div>
         </div>

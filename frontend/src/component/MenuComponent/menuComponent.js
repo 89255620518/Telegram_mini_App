@@ -198,7 +198,7 @@ const MenuComponent = () => {
                                 className={styles.carouselItem}
                                 style={{
                                     flex: `0 0 ${100 / cardsPerView}%`,
-                                    padding: '0 60px',
+                                    // padding: '0 60px',
                                 }}
                             >
                                 <MenuCard item={item} />

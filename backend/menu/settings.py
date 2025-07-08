@@ -18,8 +18,6 @@ else:
     ALLOWED_HOSTS = [
         'dali-khinkali.ru',
         '194.58.107.151',
-        '127.0.0.1',
-        'localhost',
     ]
 
 INSTALLED_APPS = [
@@ -74,24 +72,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'menu.wsgi.application'
 
-# if DEBUG:
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-# else:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.postgresql',
-#             'NAME': 'dali',
-#             'USER': 'dali_user',
-#             'PASSWORD': '20031956',
-#             'HOST': '194.58.107.151',
-#             'PORT': '5432'
-#         }
-#     }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'dali',
+            'USER': 'dali_user',
+            'PASSWORD': '20031956',
+            'HOST': '194.58.107.151',
+            'PORT': '5432'
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -177,19 +175,11 @@ DJOSER = {
 
 PHONENUMBER_DEFAULT_REGION = 'RU'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'server61.hosting.reg.ru'
-# EMAIL_PORT = 465
-# EMAIL_HOST_USER = 'zakaz@dali-khinkali.ru'
-# EMAIL_HOST_PASSWORD = '1234567Asd!'
-# EMAIL_USE_SSL = True
-# DEFAULT_FROM_EMAIL = 'zakaz@dali-khinkali.ru'
-# SERVER_EMAIL = 'zakaz@dali-khinkali.ru'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.beget.com'
+EMAIL_HOST = 'server61.hosting.reg.ru'
 EMAIL_PORT = 465
-EMAIL_HOST_USER = 'ibra001@ibrokhim.ru'
-EMAIL_HOST_PASSWORD = 'Restart%1996'
+EMAIL_HOST_USER = 'zakaz@dali-khinkali.ru'
+EMAIL_HOST_PASSWORD = '1234567Asd!'
 EMAIL_USE_SSL = True
-DEFAULT_FROM_EMAIL = 'ibra001@ibrokhim.ru'
-SERVER_EMAIL = 'ibra001@ibrokhim.ru'
+DEFAULT_FROM_EMAIL = 'zakaz@dali-khinkali.ru'
+SERVER_EMAIL = 'zakaz@dali-khinkali.ru'

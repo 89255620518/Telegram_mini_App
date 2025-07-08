@@ -152,7 +152,6 @@ const SubMenuComponent = () => {
                 className={styles.carouselItem}
                 style={{
                   flex: `0 0 ${100 / cardsPerView}%`,
-                  padding: '0 60px',
                 }}
               >
                 <MenuCard item={item} />

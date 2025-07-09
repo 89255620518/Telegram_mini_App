@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../useContext/AuthContext';
+import { useBasket } from '../../useContext/basketContext'; // Импортируем useBasket
 import { api } from '../../api/api';
 import styles from './cabinet.module.scss';
 
 const CabinetComponent = () => {
     const navigate = useNavigate();
     const { token, logout: authLogout } = useAuth();
+    const { orderHistory, historyLoading, historyError } = useBasket(); // Получаем данные из контекста
 
     const [userData, setUserData] = useState({
         first_name: '',
@@ -19,7 +21,6 @@ const CabinetComponent = () => {
         comment: ''
     });
 
-    const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isDataModalOpen, setIsDataModalOpen] = useState(false);
@@ -86,10 +87,6 @@ const CabinetComponent = () => {
                     intercom: response.intercom || '',
                     comment: response.comment || ''
                 });
-
-                // Загрузка заказов
-                const ordersResponse = await api.users.getMe(); // временно
-                setOrders(ordersResponse.orders || []);
             } catch (err) {
                 console.error('Ошибка загрузки данных:', err);
                 setError('Не удалось загрузить данные пользователя');
@@ -118,12 +115,24 @@ const CabinetComponent = () => {
         navigate('/');
     };
 
-    if (loading) {
+    // Функция для форматирования статуса заказа
+    const formatOrderStatus = (status) => {
+        const statusMap = {
+            'created': 'Создан',
+            'processing': 'В обработке',
+            'delivering': 'Доставляется',
+            'completed': 'Завершен',
+            'cancelled': 'Отменен'
+        };
+        return statusMap[status] || status;
+    };
+
+    if (loading || historyLoading) {
         return <div className={styles.loading}>Загрузка данных...</div>;
     }
 
-    if (error) {
-        return <div className={styles.error}>{error}</div>;
+    if (error || historyError) {
+        return <div className={styles.error}>{error || historyError}</div>;
     }
 
     return (
@@ -145,7 +154,7 @@ const CabinetComponent = () => {
                     className={styles.menuButton}
                 >
                     <span className={styles.icon}>📦</span>
-                    <span>Мои заказы ({orders.length})</span>
+                    <span>Мои заказы ({orderHistory.length})</span>
                 </button>
 
                 <button
@@ -256,22 +265,31 @@ const CabinetComponent = () => {
             {isOrdersOpen && (
                 <div className={styles.ordersSection}>
                     <h3>История заказов</h3>
-                    {orders.length > 0 ? (
+                    {orderHistory.length > 0 ? (
                         <div className={styles.ordersList}>
-                            {orders.map(order => (
+                            {orderHistory.map(order => (
                                 <div key={order.id} className={styles.orderItem}>
                                     <div className={styles.orderHeader}>
                                         <span>Заказ #{order.id}</span>
-                                        <span>{new Date(order.created_at).toLocaleDateString()}</span>
-                                        <span>{order.total_price} ₽</span>
+                                        <span>{new Date(order.created_at).toLocaleDateString('ru-RU', {
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}</span>
+                                        <span>{order.final_price} ₽</span>
                                     </div>
-                                    <div className={styles.orderStatus}>
-                                        Статус: {order.status}
+                                    <div className={`${styles.orderStatus} ${order.status === 'completed' ? styles.completed : ''}`}>
+                                        Статус: {formatOrderStatus(order.status)}
+                                    </div>
+                                    <div className={styles.orderAddress}>
+                                        Адрес доставки: {order.address}
                                     </div>
                                     <div className={styles.orderProducts}>
-                                        {order.items.map((item, index) => (
+                                        {order.goods.map((item, index) => (
                                             <div key={index} className={styles.orderProduct}>
-                                                {item.name} × {item.quantity} ({item.price} ₽)
+                                                {item.title} × {item.count} ({item.price} ₽)
                                             </div>
                                         ))}
                                     </div>
@@ -279,7 +297,15 @@ const CabinetComponent = () => {
                             ))}
                         </div>
                     ) : (
-                        <p className={styles.noOrders}>Вы еще не сделали ни одного заказа</p>
+                        <div className={styles.noOrders}>
+                            <p>Вы еще не сделали ни одного заказа</p>
+                            <button 
+                                onClick={() => navigate('/menu')}
+                                className={styles.orderButton}
+                            >
+                                Сделать первый заказ
+                            </button>
+                        </div>
                     )}
                 </div>
             )}

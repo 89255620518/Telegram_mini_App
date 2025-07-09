@@ -230,182 +230,185 @@ const ReserveHall = ({ hallRef }) => {
     return (
         <div className={styles.containerReserveTable} ref={hallRef}>
             <h1 className={styles.title}>Банкетный зал</h1>
-            <div className={styles.content}>
-                <form className={styles.form} onSubmit={handleSubmit}>
-                    <div className={styles.formGroup}>
-                        <label htmlFor="hall" className={styles.label}>Зал / Веранда: *</label>
-                        <select
-                            id="hall"
-                            name="hall"
-                            value={formData.hall}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            className={getFieldClass('hall')}
-                            required
+
+            <div className={styles.containerReserveTable__info}>
+                <div className={styles.content}>
+                    <form className={styles.form} onSubmit={handleSubmit}>
+                        <div className={styles.formGroup}>
+                            <label htmlFor="hall" className={styles.label}>Зал / Веранда: *</label>
+                            <select
+                                id="hall"
+                                name="hall"
+                                value={formData.hall}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                className={getFieldClass('hall')}
+                                required
+                            >
+                                <option value="">Выберите</option>
+                                <option value="Основной зал">Зал</option>
+                                <option value="Веранда">Веранда</option>
+                            </select>
+                            {touched.hall && errors.hall && (
+                                <span className={styles.errorMessage}>{errors.hall}</span>
+                            )}
+                        </div>
+
+                        <div className={styles.row}>
+                            <div className={`${styles.formGroup} ${styles.half}`}>
+                                <label htmlFor="date" className={styles.label}>Дата: *</label>
+                                <input
+                                    type="date"
+                                    id="date"
+                                    name="date"
+                                    value={formData.date}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className={getFieldClass('date')}
+                                    required
+                                />
+                                {touched.date && errors.date && (
+                                    <span className={styles.errorMessage}>{errors.date}</span>
+                                )}
+                            </div>
+                            <div className={`${styles.formGroup} ${styles.half}`}>
+                                <label htmlFor="time" className={styles.label}>Время: *</label>
+                                <input
+                                    type="time"
+                                    id="time"
+                                    name="time"
+                                    value={formData.time}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className={getFieldClass('time')}
+                                    required
+                                    min="11:00"
+                                    max="22:00"
+                                />
+                                {touched.time && errors.time && (
+                                    <span className={styles.errorMessage}>{errors.time}</span>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label htmlFor="name" className={styles.label}>Имя: *</label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                className={getFieldClass('name')}
+                                required
+                                minLength={2}
+                            />
+                            {touched.name && errors.name && (
+                                <span className={styles.errorMessage}>{errors.name}</span>
+                            )}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label htmlFor="email" className={styles.label}>Почта: *</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                className={getFieldClass('email')}
+                                required
+                            />
+                            {touched.email && errors.email && (
+                                <span className={styles.errorMessage}>{errors.email}</span>
+                            )}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label htmlFor="phone" className={styles.label}>Телефон: *</label>
+                            <input
+                                type="tel"
+                                id="phone"
+                                name="phone"
+                                value={formatPhoneDisplay(formData.phone)}
+                                onChange={handleChange}
+                                onBlur={(e) => {
+                                    handleBlur(e);
+                                    if (formData.phone.length < 12) {
+                                        setErrors(prev => ({
+                                            ...prev,
+                                            phone: 'Введите корректный номер телефона (+7 XXX XXX XX XX)'
+                                        }));
+                                    }
+                                }}
+                                className={getFieldClass('phone')}
+                                required
+                                placeholder="+7 (XXX) XXX-XX-XX"
+                            />
+                            {touched.phone && errors.phone && (
+                                <span className={styles.errorMessage}>{errors.phone}</span>
+                            )}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label htmlFor="guests" className={styles.label}>Число гостей (1-30): *</label>
+                            <input
+                                type="number"
+                                id="guests"
+                                name="guests"
+                                min="1"
+                                max="30"
+                                value={formData.guests}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                className={getFieldClass('guests')}
+                                required
+                            />
+                            {touched.guests && errors.guests && (
+                                <span className={styles.errorMessage}>{errors.guests}</span>
+                            )}
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label htmlFor="comments" className={styles.label}>Комментарии:</label>
+                            <textarea
+                                id="comments"
+                                name="comments"
+                                value={formData.comments}
+                                onChange={handleChange}
+                                className={styles.textarea}
+                                rows={3}
+                            />
+                        </div>
+
+                        {authMessage && (
+                            <div className={styles.authMessage}>
+                                {authMessage}
+                                <Link to="/login" className={styles.authLink}>Войти</Link>
+                                <span> или </span>
+                                <Link to="/register" className={styles.authLink}>Зарегистрироваться</Link>
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            className={styles.submitButton}
+                            disabled={isSubmitting}
                         >
-                            <option value="">Выберите</option>
-                            <option value="Основной зал">Зал</option>
-                            <option value="Веранда">Веранда</option>
-                        </select>
-                        {touched.hall && errors.hall && (
-                            <span className={styles.errorMessage}>{errors.hall}</span>
-                        )}
-                    </div>
+                            {isSubmitting ? 'Отправка...' : 'Предзаказ'}
+                        </button>
+                    </form>
+                </div>
 
-                    <div className={styles.row}>
-                        <div className={`${styles.formGroup} ${styles.half}`}>
-                            <label htmlFor="date" className={styles.label}>Дата: *</label>
-                            <input
-                                type="date"
-                                id="date"
-                                name="date"
-                                value={formData.date}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                className={getFieldClass('date')}
-                                required
-                            />
-                            {touched.date && errors.date && (
-                                <span className={styles.errorMessage}>{errors.date}</span>
-                            )}
-                        </div>
-                        <div className={`${styles.formGroup} ${styles.half}`}>
-                            <label htmlFor="time" className={styles.label}>Время: *</label>
-                            <input
-                                type="time"
-                                id="time"
-                                name="time"
-                                value={formData.time}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                className={getFieldClass('time')}
-                                required
-                                min="11:00"
-                                max="22:00"
-                            />
-                            {touched.time && errors.time && (
-                                <span className={styles.errorMessage}>{errors.time}</span>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <label htmlFor="name" className={styles.label}>Имя: *</label>
-                        <input
-                            type="text"
-                            id="name"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            className={getFieldClass('name')}
-                            required
-                            minLength={2}
-                        />
-                        {touched.name && errors.name && (
-                            <span className={styles.errorMessage}>{errors.name}</span>
-                        )}
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <label htmlFor="email" className={styles.label}>Почта: *</label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            className={getFieldClass('email')}
-                            required
-                        />
-                        {touched.email && errors.email && (
-                            <span className={styles.errorMessage}>{errors.email}</span>
-                        )}
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <label htmlFor="phone" className={styles.label}>Телефон: *</label>
-                        <input
-                            type="tel"
-                            id="phone"
-                            name="phone"
-                            value={formatPhoneDisplay(formData.phone)}
-                            onChange={handleChange}
-                            onBlur={(e) => {
-                                handleBlur(e);
-                                if (formData.phone.length < 12) {
-                                    setErrors(prev => ({
-                                        ...prev,
-                                        phone: 'Введите корректный номер телефона (+7 XXX XXX XX XX)'
-                                    }));
-                                }
-                            }}
-                            className={getFieldClass('phone')}
-                            required
-                            placeholder="+7 (XXX) XXX-XX-XX"
-                        />
-                        {touched.phone && errors.phone && (
-                            <span className={styles.errorMessage}>{errors.phone}</span>
-                        )}
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <label htmlFor="guests" className={styles.label}>Число гостей (1-30): *</label>
-                        <input
-                            type="number"
-                            id="guests"
-                            name="guests"
-                            min="1"
-                            max="30"
-                            value={formData.guests}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            className={getFieldClass('guests')}
-                            required
-                        />
-                        {touched.guests && errors.guests && (
-                            <span className={styles.errorMessage}>{errors.guests}</span>
-                        )}
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <label htmlFor="comments" className={styles.label}>Комментарии:</label>
-                        <textarea
-                            id="comments"
-                            name="comments"
-                            value={formData.comments}
-                            onChange={handleChange}
-                            className={styles.textarea}
-                            rows={3}
-                        />
-                    </div>
-
-                    {authMessage && (
-                        <div className={styles.authMessage}>
-                            {authMessage}
-                            <Link to="/login" className={styles.authLink}>Войти</Link>
-                            <span> или </span>
-                            <Link to="/register" className={styles.authLink}>Зарегистрироваться</Link>
-                        </div>
-                    )}
-
-                    <button
-                        type="submit"
-                        className={styles.submitButton}
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? 'Отправка...' : 'Предзаказ'}
-                    </button>
-                </form>
-            </div>
-
-            <div className={styles.content__imgs}>
-                <img
-                    className={styles.content__imgs_img}
-                    src={fotoHall}
-                    alt='Банкет Дали-Хинкали'
-                />
+                <div className={styles.content__imgs}>
+                    <img
+                        className={styles.content__imgs_img}
+                        src={fotoHall}
+                        alt='Банкет Дали-Хинкали'
+                    />
+                </div>
             </div>
 
             {/* Уведомление об успешном бронировании */}

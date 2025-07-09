@@ -30,6 +30,10 @@
             gap: 50px;
             width: 100%;
 
+            @media screen and (max-width: 500px) {
+                width: auto;
+            }
+
             &_info {
                 display: flex;
                 flex-direction: column;

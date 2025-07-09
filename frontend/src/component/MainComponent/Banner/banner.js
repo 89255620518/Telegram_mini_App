@@ -8,22 +8,16 @@ import { api } from '../../../api/api';
 import { useCallback, useEffect, useState } from 'react';
 
 const BannerComponent = () => {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
 
     // Оптимизированная загрузка данных
     const fetchBeverageItems = useCallback(async () => {
         try {
-            setLoading(true);
             const response = await api.goods.getAll();
             const beverages = response?.results?.filter(item => item.type === 'Напитки') || [];
             return beverages;
         } catch (err) {
             console.error('Ошибка при загрузке напитков:', err);
-            setError('Не удалось загрузить меню напитков');
             return [];
-        } finally {
-            setLoading(false);
         }
     }, []);
 

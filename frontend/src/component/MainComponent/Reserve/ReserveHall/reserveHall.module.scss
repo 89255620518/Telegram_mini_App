@@ -1,5 +1,5 @@
 .containerReserveTable {
-    max-width: 800px;
+    width: 100%;
     margin: 0 auto;
     padding: 2rem 2rem 7rem;
     font-family: 'Arial', sans-serif;
@@ -7,6 +7,27 @@
     display: flex;
     flex-direction: column;
     gap: 60px;
+    align-items: center;
+
+    &__info {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        max-width: 1400px;
+        width: 100%;
+        padding: 2rem 2rem 9rem;
+
+        @media screen and (max-width: 780px) {
+            padding: 0;
+            height: 100% !important;
+        }
+
+        @media screen and (max-width: 1050px) {
+            flex-direction: column;
+            height: 1800px;
+            gap: 80px;
+        }
+    }
 }
 
 .title {
@@ -20,6 +41,7 @@
     border-radius: 8px;
     padding: 2rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
 
     &__imgs {
         min-height: 300px;
@@ -35,6 +57,14 @@
             border-radius: 20px;
             position: absolute;
             height: 100%;
+
+            // @media screen and (max-width: 500px) {
+            //     height: 100%;
+            // }
+
+            @media (min-width: 501px) and (max-width: 1050px) {
+                height: auto;
+            }
         }
     }
 }

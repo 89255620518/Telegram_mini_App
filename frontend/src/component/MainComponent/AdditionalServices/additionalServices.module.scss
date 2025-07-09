@@ -1,12 +1,26 @@
 .containerServices {
-    padding: 2rem 0 7rem;
     text-align: center;
     position: relative;
-    max-width: 1200px;
+    width: 100%;
+    padding: 3rem 2rem 7rem;
     margin: 0 auto;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    @media screen and (max-width: 700px) {
+        padding: 0;
+    }
 
     &__content {
+        max-width: 1400px;
+        padding: 2rem;
+
+        @media screen and (max-width: 700px) {
+            padding: 0;
+        }
+
         &__info {
             position: relative;
             height: 300px; // или нужная вам высота

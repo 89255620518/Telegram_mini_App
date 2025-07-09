@@ -1,5 +1,5 @@
 .containerTaxi {
-    max-width: 800px;
+    width: 100%;
     margin: 0 auto;
     padding: 2rem 2rem 7rem;
     font-family: "Arial", sans-serif;
@@ -13,6 +13,17 @@
     }
 
     &__content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+        max-width: 1400px;
+        padding: 2rem 2rem 6rem;
+
+        @media screen and (max-width: 800px) {
+            flex-direction: column;
+            padding: 0;
+        }
 
         &__imgs {
 

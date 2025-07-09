@@ -12,6 +12,9 @@ export const BasketProvider = ({ children }) => {
     const [orderProcessing, setOrderProcessing] = useState(false);
     const [orderError, setOrderError] = useState(null);
     const [paymentLink, setPaymentLink] = useState(null);
+    const [orderHistory, setOrderHistory] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState(null);
 
     // 1. Сначала объявляем все вычисляемые значения
     const calculateTotalItems = (items) => items.reduce((sum, item) => sum + item.quantity, 0);
@@ -55,9 +58,31 @@ export const BasketProvider = ({ children }) => {
         }
     }, [token]);
 
+    // Функция для загрузки истории заказов
+    const loadOrderHistory = useCallback(async () => {
+        if (!token) {
+            setOrderHistory([]);
+            return;
+        }
+
+        try {
+            setHistoryLoading(true);
+            setHistoryError(null);
+            const response = await api.goods.getOrderHistory(token);
+            setOrderHistory(response);
+        } catch (err) {
+            console.error('Ошибка загрузки истории заказов:', err);
+            setHistoryError('Не удалось загрузить историю заказов');
+            setOrderHistory([]);
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, [token]);
+
     useEffect(() => {
         loadBasket();
-    }, [loadBasket]);
+        loadOrderHistory(); // Загружаем историю заказов при монтировании
+    }, [loadBasket, loadOrderHistory]);
 
     // 3. Функции для работы с товарами
     const khinkaliIds = useMemo(() => [82, 174, 81, 83], []);
@@ -110,47 +135,6 @@ export const BasketProvider = ({ children }) => {
         }
     }, [token, items, loadBasket]);
 
-    // 4. Функции оформления заказа
-    // const checkout = useCallback(async (orderData) => {
-    //     if (!token) throw new Error("Требуется авторизация");
-    //     if (!items.length) throw new Error("Корзина пуста");
-
-    //     setOrderProcessing(true);
-    //     setOrderError(null);
-
-    //     try {
-    //         const currentTotalPrice = calculateTotalPrice(items);
-
-    //         // Отправка заказа
-    //         await api.users.sendOrder({
-    //             address: orderData.address,
-    //             delivery_time: orderData.delivery_time,
-    //             comments: orderData.comments || '',
-    //             description: orderData.description || 'Заказ из корзины',
-    //             goods_id: items.map(item => item.id),
-    //             count_goods: items.map(item => item.quantity),
-    //             price_goods: items.map(item => item.price),
-    //             final_price: currentTotalPrice
-    //         }, token);
-
-    //         // Создание платежа
-    //         const paymentResponse = await api.users.processPayment({
-    //             price: currentTotalPrice,
-    //             num_order: `order_${Date.now()}`,
-    //             service_name: 'Оплата заказа'
-    //         }, token);
-
-    //         setPaymentLink(paymentResponse.data.success);
-    //         await clearBasket();
-    //         return true;
-    //     } catch (error) {
-    //         console.error('Ошибка оформления заказа:', error);
-    //         setOrderError(error.response?.data?.error || 'Ошибка оформления заказа');
-    //         throw error;
-    //     } finally {
-    //         setOrderProcessing(false);
-    //     }
-    // }, [token, items, clearBasket]);
     const checkout = useCallback(async (orderData) => {
         if (!token) throw new Error("Требуется авторизация");
         if (!items.length) throw new Error("Корзина пуста");
@@ -184,6 +168,7 @@ export const BasketProvider = ({ children }) => {
             if (paymentResponse && paymentResponse.success) {
                 setPaymentLink(paymentResponse.success);
                 await clearBasket();
+                await loadOrderHistory(); // Обновляем историю после успешного заказа
                 return paymentResponse.success; // Возвращаем ссылку
             }
 
@@ -196,7 +181,7 @@ export const BasketProvider = ({ children }) => {
             setOrderProcessing(false);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [token, items, clearBasket]);
+    }, [token, items, clearBasket, loadOrderHistory]);
 
     const clearPayment = useCallback(() => {
         setPaymentLink(null);
@@ -219,7 +204,12 @@ export const BasketProvider = ({ children }) => {
         orderProcessing,
         orderError,
         paymentLink,
-        clearPayment
+        clearPayment,
+        // История заказов
+        orderHistory,
+        historyLoading,
+        historyError,
+        refreshOrderHistory: loadOrderHistory
     }), [
         items,
         loading,
@@ -235,7 +225,12 @@ export const BasketProvider = ({ children }) => {
         orderProcessing,
         orderError,
         paymentLink,
-        clearPayment
+        clearPayment,
+        // История заказов
+        orderHistory,
+        historyLoading,
+        historyError,
+        loadOrderHistory
     ]);
 
     return (

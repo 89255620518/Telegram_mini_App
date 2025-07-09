@@ -81,6 +81,7 @@ const AdditionalServicesComponent = () => {
     ]);
 
     const [comment, setComment] = useState('');
+    // eslint-disable-next-line no-unused-vars
     const [description, setDescription] = useState('Дополнительные услуги по приготовлению мяса');
     const [isLoading, setIsLoading] = useState(false);
     const [orderStatus, setOrderStatus] = useState(null);
@@ -98,6 +99,11 @@ const AdditionalServicesComponent = () => {
     const handleSubmitOrder = async () => {
         if (total === 0) {
             setOrderStatus({ type: 'error', message: 'Добавьте хотя бы один товар' });
+            return;
+        }
+
+        if (!token) {
+            setOrderStatus({ type: 'error', message: 'Для оформлении заказа, нужно авторизоваться' });
             return;
         }
 

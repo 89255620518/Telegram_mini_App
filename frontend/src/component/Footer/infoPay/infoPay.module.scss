@@ -432,6 +432,12 @@ th {
 .FormVozvrat {
   display: flex;
   justify-content: space-around;
+
+  @media screen and (max-width: 1050px) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .DelTitle {
@@ -443,7 +449,10 @@ th {
 }
 
 .pad {
-  padding: 0 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 50px 20px;
   background: #ffffff;
 
 }
@@ -451,6 +460,7 @@ th {
 .containerVozvrat {
   display: flex !important;
   flex-direction: column !important;
+  max-width: 1400px;
 }
 
 @media (max-width: 750px) {
@@ -543,8 +553,13 @@ th {
 
 .oplata {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  max-width: 1400px;
   gap: 15px;
+
+  @media screen and (max-width: 1050px) {
+    flex-direction: column;
+  }
 }
 
 .oplata__item {

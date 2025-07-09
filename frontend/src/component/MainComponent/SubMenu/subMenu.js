@@ -92,6 +92,7 @@ const MenuComponent = () => {
     } else {
       animateReset();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDragging, touchEnd, touchStart, nextSlide, prevSlide]);
 
   const animateReset = useCallback(() => {
